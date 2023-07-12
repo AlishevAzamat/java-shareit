@@ -2,9 +2,6 @@ package ru.practicum.shareit.item;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.item.repository.ItemRepositoryImpl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

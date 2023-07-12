@@ -1,15 +1,12 @@
-package ru.practicum.shareit.item.service;
+package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.IncorrectParameterException;
 import ru.practicum.shareit.exception.ParameterNotFoundException;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +93,6 @@ public class ItemServiceImpl implements ItemService {
                 item.setName(itemDto.getName());
             }
         } catch (NullPointerException e) {
-            log.error("Пустое поле");
             return;
         }
     }
@@ -107,7 +103,6 @@ public class ItemServiceImpl implements ItemService {
                 item.setDescription(itemDto.getDescription());
             }
         } catch (NullPointerException e) {
-            log.error("Пустое поле");
             return;
         }
     }
@@ -117,7 +112,6 @@ public class ItemServiceImpl implements ItemService {
             itemDto.getAvailable().toString();
             item.setAvailable(itemDto.getAvailable());
         } catch (NullPointerException e) {
-            log.error("Пустое поле");
             return;
         }
     }

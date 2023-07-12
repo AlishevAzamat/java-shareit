@@ -2,9 +2,6 @@ package ru.practicum.shareit.user;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.user.repository.UserRepositoryImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -5,18 +5,12 @@ import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.exception.DuplicateException;
 import ru.practicum.shareit.exception.IncorrectParameterException;
 import ru.practicum.shareit.exception.ParameterNotFoundException;
-import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.user.repository.UserRepositoryImpl;
-import ru.practicum.shareit.user.service.UserService;
-import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceImplTest {
     private final UserRepository userRepository = new UserRepositoryImpl();
-    private final UserService userService = new UserServiceImpl(userRepository);
+    private final UserService userService = new UserServiceImpl(userRepository,null);
     private final UserMapper userMapper = new UserMapper();
 
     @BeforeEach
@@ -26,7 +20,7 @@ class UserServiceImplTest {
 
     @Test
     void add() {
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
@@ -36,12 +30,12 @@ class UserServiceImplTest {
 
     @Test
     void addDuplicateEmail() {
-        userService.add(User.builder()
+        userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
         Throwable thrown = assertThrows(DuplicateException.class, () -> {
-            userService.add(User.builder()
+            userService.add(UserDto.builder()
                     .name("name")
                     .email("email@mail.ru").build());
         });
@@ -51,7 +45,7 @@ class UserServiceImplTest {
 
     @Test
     void updateAll() {
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setName("Nik");
@@ -65,7 +59,7 @@ class UserServiceImplTest {
 
     @Test
     void updateName() {
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setName("Nik");
@@ -78,11 +72,11 @@ class UserServiceImplTest {
 
     @Test
     void updateDuplicateEmail() {
-        userService.add(User.builder()
+        userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("user@mail.ru").build());
         user.setEmail("email@mail.ru");
@@ -95,7 +89,7 @@ class UserServiceImplTest {
 
     @Test
     void updateEmail() {
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setEmail("user@user.ru");
@@ -108,7 +102,7 @@ class UserServiceImplTest {
 
     @Test
     void getById() {
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
@@ -137,7 +131,7 @@ class UserServiceImplTest {
     void getAll() {
         assertEquals(0, userService.getAll().size());
 
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
@@ -150,7 +144,7 @@ class UserServiceImplTest {
 
     @Test
     void delete() {
-        User user = userService.add(User.builder()
+        User user = userService.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 

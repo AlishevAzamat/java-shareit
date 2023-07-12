@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user.service;
+package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,9 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateException;
 import ru.practicum.shareit.exception.IncorrectParameterException;
 import ru.practicum.shareit.exception.ParameterNotFoundException;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -17,14 +14,13 @@ import java.util.List;
 @Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
-    public User add(User user) {
-        for (User user1 : userRepository.getAll()) {
-            if (user1.getEmail().equals(user.getEmail())) {
-                throw new DuplicateException("Почта уже существует");
-            }
-            log.info("Почта {} уже существует", user.getEmail());
+    public User add(UserDto userDto) {
+        User user = userMapper.toUser(userDto);
+        if (validationEmail(user, userDto)) {
+            throw new DuplicateException("Эта почта уже используется, введите другую.");
         }
         log.info("Пользователь {} создан", user.getName());
         return userRepository.add(user);
@@ -77,25 +73,31 @@ public class UserServiceImpl implements UserService {
                 user.setName(userDto.getName());
             }
         } catch (NullPointerException e) {
-            log.error("Пустое поле");
             return;
         }
     }
 
     private void updateEmail(User user, UserDto userDto) {
         try {
-            if (!userDto.getEmail().isBlank()) {
-                for (User user1 : userRepository.getAll()) {
-                    if (user1.getEmail().equals(userDto.getEmail()) && (!user.getId().equals(user1.getId()))) {
-                        throw new DuplicateException("Эта почта уже используется, введите другую.");
-                    }
-                    log.info("{} - Эта почта уже используется, введите другую.", user.getEmail());
-                }
+            if (validationEmail(user, userDto)) {
+                throw new DuplicateException("Эта почта уже используется, введите другую.");
+            } else {
                 user.setEmail(userDto.getEmail());
             }
         } catch (NullPointerException e) {
-            log.error("Пустое поле");
             return;
         }
+    }
+
+
+    private boolean validationEmail(User user, UserDto userDto) {
+        if (!userDto.getEmail().isBlank()) {
+            for (User user1 : userRepository.getAll()) {
+                if (user1.getEmail().equals(userDto.getEmail()) && (!user.getId().equals(user1.getId()))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -1,24 +1,25 @@
-package ru.practicum.shareit.item.model;
+package ru.practicum.shareit.item;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.User;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * TODO Sprint add-controllers.
  */
 @Data
 @Builder
-public class Item {
-    private long id;
+public class ItemDto {
+    private Long id;
     private User owner;
     @NotBlank(message = "Имя не должно быть пустым.")
     private String name;
     @NotBlank(message = "Описание не должно быть пустым.")
     private String description;
-    private boolean available;
-    private ItemRequest request;
+    @NotNull
+    private Boolean available;
+    private Long request;
 }

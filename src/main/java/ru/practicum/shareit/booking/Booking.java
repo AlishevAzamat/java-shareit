@@ -1,8 +1,7 @@
 package ru.practicum.shareit.booking;
 
-import ru.practicum.shareit.booking.status.Status;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.user.User;
 
 import java.time.LocalDate;
 
