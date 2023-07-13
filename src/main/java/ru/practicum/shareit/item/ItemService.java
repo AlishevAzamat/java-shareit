@@ -3,13 +3,13 @@ package ru.practicum.shareit.item;
 import java.util.List;
 
 public interface ItemService {
-    Item add(long id, Item item);
+    ItemDto add(long id, ItemDto itemDto);
 
-    Item update(long userId, long itemId, ItemDto itemDto);
+    ItemDto update(long userId, long itemId, ItemDto itemDto);
 
-    Item getById(long id);
+    ItemDto getById(long id);
 
-    List<Item> getAll(long userId);
+    List<ItemDto> getAll(long userId);
 
-    List<Item> searchText(long userId, String str);
+    List<ItemDto> searchText(long userId, String str);
 }

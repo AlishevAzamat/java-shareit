@@ -13,4 +13,8 @@ public interface ItemRepository {
     Item getById(long id);
 
     List<Item> getAll();
+
+    List<Item> getAllByOwnerId(long id);
+
+    List<Item> findByText(long userId, String str);
 }

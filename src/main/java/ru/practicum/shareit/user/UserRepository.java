@@ -12,4 +12,6 @@ public interface UserRepository {
     User getById(long id);
 
     List<User> getAll();
+
+    boolean checkEmail(UserDto userDto);
 }

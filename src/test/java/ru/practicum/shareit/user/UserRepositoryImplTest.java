@@ -3,61 +3,61 @@ package ru.practicum.shareit.user;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UserRepositoryImplTest {
-    private final UserRepository userRepository = new UserRepositoryImpl();
+    private final UserRepository repository = new UserRepositoryImpl();
 
     @BeforeEach
     void beforeEach() {
-        userRepository.getAll().clear();
+        repository.getAll().clear();
     }
 
     @Test
     void add() {
-        User user = userRepository.add(User.builder()
+        User user = repository.add(User.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
         assertEquals(1, user.getId());
-        assertEquals(1, userRepository.getAll().size());
+        assertEquals(1, repository.getAll().size());
     }
 
     @Test
     void update() {
-        User user = userRepository.add(User.builder()
+        User user = repository.add(User.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setName("Nik");
-        User update = userRepository.update(user);
+        User update = repository.update(user);
 
         assertEquals(1, update.getId());
         assertEquals("Nik", update.getName());
-        assertEquals(1, userRepository.getAll().size());
+        assertEquals(1, repository.getAll().size());
     }
 
     @Test
     void delete() {
-        User user = userRepository.add(User.builder()
+        User user = repository.add(User.builder()
                 .name("name")
                 .email("email@mail.ru").build());
-        userRepository.delete(user.getId());
+        repository.delete(user.getId());
 
-        assertEquals(0, userRepository.getAll().size());
+        assertEquals(0, repository.getAll().size());
     }
 
     @Test
     void getAll() {
-        assertEquals(0, userRepository.getAll().size());
+        assertEquals(0, repository.getAll().size());
 
-        userRepository.add(User.builder()
+        repository.add(User.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
-        assertEquals(1, userRepository.getAll().size());
+        assertEquals(1, repository.getAll().size());
 
-        userRepository.delete(1);
+        repository.delete(1);
 
-        assertEquals(0, userRepository.getAll().size());
+        assertEquals(0, repository.getAll().size());
     }
 }

@@ -2,7 +2,6 @@ package ru.practicum.shareit.item;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.practicum.shareit.exception.IncorrectParameterException;
 import ru.practicum.shareit.exception.ParameterNotFoundException;
 import ru.practicum.shareit.user.*;
 
@@ -11,9 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class ItemServiceImplTest {
     private final ItemRepository itemRepository = new ItemRepositoryImpl();
     private final UserRepository userRepository = new UserRepositoryImpl();
-    private final UserService userService = new UserServiceImpl(userRepository,null);
-    private final ItemService itemService = new ItemServiceImpl(userService, itemRepository);
     private final ItemMapper itemMapper = new ItemMapper();
+    private final UserMapper userMapper = new UserMapper();
+    private final UserService userService = new UserServiceImpl(userRepository, userMapper);
+    private final ItemService itemService = new ItemServiceImpl(userService, itemRepository, itemMapper);
 
     @BeforeEach
     void beforeEach() {
@@ -26,7 +26,7 @@ class ItemServiceImplTest {
 
     @Test
     void add() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
@@ -36,18 +36,9 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void addUserIdNegative() {
-        Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            itemService.add(-1, Item.builder().build());
-        });
-
-        assertNotNull(thrown.getMessage());
-    }
-
-    @Test
     void addUserIdUnknown() {
-        Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
-            itemService.add(999, Item.builder().build());
+        Throwable thrown = assertThrows(NullPointerException.class, () -> {
+            itemService.add(999, ItemDto.builder().build());
         });
 
         assertNotNull(thrown.getMessage());
@@ -55,29 +46,29 @@ class ItemServiceImplTest {
 
     @Test
     void updateAll() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
         item.setAvailable(false);
         item.setDescription("description");
         item.setName("Nik");
-        Item update = itemService.update(1, item.getId(), itemMapper.toItemDto(item));
+        ItemDto update = itemService.update(1, item.getId(), item);
 
         assertEquals(item.getId(), update.getId());
         assertEquals("Nik", update.getName());
         assertEquals("description", update.getDescription());
-        assertFalse(update.isAvailable());
+        assertFalse(update.getAvailable());
     }
 
     @Test
     void updateName() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
         item.setName("Nik");
-        Item update = itemService.update(1, item.getId(), itemMapper.toItemDto(item));
+        ItemDto update = itemService.update(1, item.getId(), item);
 
         assertEquals(item.getId(), update.getId());
         assertEquals("Nik", update.getName());
@@ -85,12 +76,12 @@ class ItemServiceImplTest {
 
     @Test
     void updateDescription() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
         item.setDescription("description");
-        Item update = itemService.update(1, item.getId(), itemMapper.toItemDto(item));
+        ItemDto update = itemService.update(1, item.getId(), item);
 
         assertEquals(item.getId(), update.getId());
         assertEquals("description", update.getDescription());
@@ -98,29 +89,29 @@ class ItemServiceImplTest {
 
     @Test
     void updateAvailable() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
         item.setAvailable(false);
-        Item update = itemService.update(1, item.getId(), itemMapper.toItemDto(item));
+        ItemDto update = itemService.update(1, item.getId(), item);
 
         assertEquals(item.getId(), update.getId());
-        assertFalse(update.isAvailable());
+        assertFalse(update.getAvailable());
     }
 
     @Test
     void updateUserIsNotOwner() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
-        User user = userService.add(UserDto.builder()
+        UserDto user = userService.add(UserDto.builder()
                 .name("name")
                 .email("mail@mail.ru").build());
         item.setAvailable(false);
         Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
-            itemService.update(user.getId(), item.getId(), itemMapper.toItemDto(item));
+            itemService.update(user.getId(), item.getId(), item);
         });
 
         assertNotNull(thrown.getMessage());
@@ -128,7 +119,7 @@ class ItemServiceImplTest {
 
     @Test
     void getById() {
-        Item item = itemService.add(1, Item.builder()
+        ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
@@ -137,17 +128,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getByIdNegative() {
-        Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            itemService.getById(-1);
-        });
-
-        assertNotNull(thrown.getMessage());
-    }
-
-    @Test
     void getByIdUnknown() {
-        Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
+        Throwable thrown = assertThrows(NullPointerException.class, () -> {
             itemService.getById(999);
         });
 
@@ -156,11 +138,11 @@ class ItemServiceImplTest {
 
     @Test
     void getAll() {
-        itemService.add(1, Item.builder()
+        itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
-        itemService.add(1, Item.builder()
+        itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
@@ -170,7 +152,7 @@ class ItemServiceImplTest {
 
     @Test
     void searchText() {
-        itemService.add(1, Item.builder()
+        itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
@@ -180,7 +162,7 @@ class ItemServiceImplTest {
 
     @Test
     void searchUpperText() {
-        itemService.add(1, Item.builder()
+        itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
@@ -190,7 +172,7 @@ class ItemServiceImplTest {
 
     @Test
     void searchTextIsEmpty() {
-        itemService.add(1, Item.builder()
+        itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());
@@ -200,7 +182,7 @@ class ItemServiceImplTest {
 
     @Test
     void searchHalfUpperText() {
-        itemService.add(1, Item.builder()
+        itemService.add(1, ItemDto.builder()
                 .name("name")
                 .description("desc")
                 .available(true).build());

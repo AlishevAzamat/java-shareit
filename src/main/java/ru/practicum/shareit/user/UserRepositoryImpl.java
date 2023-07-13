@@ -39,4 +39,14 @@ public class UserRepositoryImpl implements UserRepository {
     public List<User> getAll() {
         return new ArrayList<>(users.values());
     }
+
+    @Override
+    public boolean checkEmail(UserDto userDto) {
+        for (User user : users.values()) {
+            if (user.getEmail().equals(userDto.getEmail())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

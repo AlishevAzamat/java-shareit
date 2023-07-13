@@ -3,39 +3,37 @@ package ru.practicum.shareit.user;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.exception.DuplicateException;
-import ru.practicum.shareit.exception.IncorrectParameterException;
-import ru.practicum.shareit.exception.ParameterNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceImplTest {
-    private final UserRepository userRepository = new UserRepositoryImpl();
-    private final UserService userService = new UserServiceImpl(userRepository,null);
+    private final UserRepository repository = new UserRepositoryImpl();
     private final UserMapper userMapper = new UserMapper();
+    private final UserService service = new UserServiceImpl(repository, userMapper);
 
     @BeforeEach
     void beforeEach() {
-        userService.getAll().clear();
+        service.getAll().clear();
     }
 
     @Test
     void add() {
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
         assertEquals(1, user.getId());
-        assertEquals(1, userRepository.getAll().size());
+        assertEquals(1, repository.getAll().size());
     }
 
     @Test
     void addDuplicateEmail() {
-        userService.add(UserDto.builder()
+        service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
         Throwable thrown = assertThrows(DuplicateException.class, () -> {
-            userService.add(UserDto.builder()
+            service.add(UserDto.builder()
                     .name("name")
                     .email("email@mail.ru").build());
         });
@@ -45,12 +43,12 @@ class UserServiceImplTest {
 
     @Test
     void updateAll() {
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setName("Nik");
         user.setEmail("user@user.ru");
-        User update = userService.update(user.getId(), userMapper.toUserDto(user));
+        UserDto update = service.update(user.getId(), user);
 
         assertEquals(user.getId(), update.getId());
         assertEquals("Nik", update.getName());
@@ -59,11 +57,11 @@ class UserServiceImplTest {
 
     @Test
     void updateName() {
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setName("Nik");
-        User update = userService.update(user.getId(), userMapper.toUserDto(user));
+        UserDto update = service.update(user.getId(), user);
 
         assertEquals(user.getId(), update.getId());
         assertEquals("Nik", update.getName());
@@ -72,16 +70,16 @@ class UserServiceImplTest {
 
     @Test
     void updateDuplicateEmail() {
-        userService.add(UserDto.builder()
+        service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("user@mail.ru").build());
         user.setEmail("email@mail.ru");
         Throwable thrown = assertThrows(DuplicateException.class, () -> {
-            userService.update(user.getId(), userMapper.toUserDto(user));
+            service.update(user.getId(), user);
         });
 
         assertNotNull(thrown.getMessage());
@@ -89,11 +87,11 @@ class UserServiceImplTest {
 
     @Test
     void updateEmail() {
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
         user.setEmail("user@user.ru");
-        User update = userService.update(user.getId(), userMapper.toUserDto(user));
+        UserDto update = service.update(user.getId(), user);
 
         assertEquals(user.getId(), update.getId());
         assertEquals("name", update.getName());
@@ -102,74 +100,38 @@ class UserServiceImplTest {
 
     @Test
     void getById() {
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
-        assertEquals(user, userService.getById(user.getId()));
-    }
-
-    @Test
-    void getByIdNegative() {
-        Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            userService.getById(-1);
-        });
-
-        assertNotNull(thrown.getMessage());
-    }
-
-    @Test
-    void getByIdUnknown() {
-        Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
-            userService.getById(999);
-        });
-
-        assertNotNull(thrown.getMessage());
+        assertEquals(user, userMapper.toUserDto(service.getById(user.getId())));
     }
 
     @Test
     void getAll() {
-        assertEquals(0, userService.getAll().size());
+        assertEquals(0, service.getAll().size());
 
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
-        assertEquals(1, userService.getAll().size());
+        assertEquals(1, service.getAll().size());
 
-        userService.delete(user.getId());
+        service.delete(user.getId());
 
-        assertEquals(0, userService.getAll().size());
+        assertEquals(0, service.getAll().size());
     }
 
     @Test
     void delete() {
-        User user = userService.add(UserDto.builder()
+        UserDto user = service.add(UserDto.builder()
                 .name("name")
                 .email("email@mail.ru").build());
 
-        assertEquals(1, userRepository.getAll().size());
+        assertEquals(1, repository.getAll().size());
 
-        userService.delete(user.getId());
+        service.delete(user.getId());
 
-        assertEquals(0, userRepository.getAll().size());
-    }
-
-    @Test
-    void deleteByIdNegative() {
-        Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            userService.delete(-1);
-        });
-
-        assertNotNull(thrown.getMessage());
-    }
-
-    @Test
-    void deleteByIdUnknown() {
-        Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
-            userService.delete(999);
-        });
-
-        assertNotNull(thrown.getMessage());
+        assertEquals(0, repository.getAll().size());
     }
 }

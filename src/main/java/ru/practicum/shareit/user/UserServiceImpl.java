@@ -4,9 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateException;
-import ru.practicum.shareit.exception.IncorrectParameterException;
-import ru.practicum.shareit.exception.ParameterNotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -17,87 +16,66 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public User add(UserDto userDto) {
-        User user = userMapper.toUser(userDto);
-        if (validationEmail(user, userDto)) {
-            throw new DuplicateException("Эта почта уже используется, введите другую.");
+    public UserDto add(UserDto userDto) {
+        if (userRepository.checkEmail(userDto)) {
+            throw new DuplicateException("Почта существует");
         }
-        log.info("Пользователь {} создан", user.getName());
-        return userRepository.add(user);
+        User user = userRepository.add(userMapper.toUser(userDto));
+        log.info("Создан пользователь {}", user);
+        return userMapper.toUserDto(user);
     }
 
     @Override
-    public User update(Long id, UserDto userDto) {
-        User user = getById(id);
+    public UserDto update(Long id, UserDto userDto) {
+        User user = userRepository.getById(id);
         updateName(user, userDto);
         updateEmail(user, userDto);
         log.info("Пользователь обновлен {}", user);
-        return userRepository.update(user);
+        return userMapper.toUserDto(user);
     }
 
     @Override
     public void delete(long id) {
-        validationId(id);
-        log.info("Пользователь {} удален", userRepository.getById(id));
         userRepository.delete(id);
+        log.info("Пользователь {} удален", userRepository.getById(id));
     }
 
     @Override
     public User getById(long id) {
-        validationId(id);
+        User user = userRepository.getById(id);
         log.info("Запрошен пользователь {} ", userRepository.getById(id));
-        return userRepository.getById(id);
+        return user;
     }
 
     @Override
-    public List<User> getAll() {
-        log.info("Запрошен список пользователей, количество - {}", userRepository.getAll().size());
-        return userRepository.getAll();
-    }
-
-    private void validationId(long id) {
-        try {
-            userRepository.getById(id).getId();
-        } catch (NullPointerException e) {
-            if (id <= 0) {
-                throw new IncorrectParameterException("id меньше 0");
-            } else {
-                throw new ParameterNotFoundException("id не найден");
-            }
+    public List<UserDto> getAll() {
+        List<UserDto> userDto = new ArrayList<>();
+        for (User users : userRepository.getAll()) {
+            UserDto userDtoNew = userMapper.toUserDto(users);
+            userDto.add(userDtoNew);
         }
+        log.info("Запрошен список пользователей, количество - {}", userRepository.getAll().size());
+        return userDto;
     }
 
     private void updateName(User user, UserDto userDto) {
-        try {
-            if (!userDto.getName().isBlank()) {
-                user.setName(userDto.getName());
-            }
-        } catch (NullPointerException e) {
+        if (userDto.getName() == null) {
             return;
+        } else {
+            user.setName(userDto.getName());
         }
     }
 
     private void updateEmail(User user, UserDto userDto) {
-        try {
-            if (validationEmail(user, userDto)) {
-                throw new DuplicateException("Эта почта уже используется, введите другую.");
-            } else {
-                user.setEmail(userDto.getEmail());
-            }
-        } catch (NullPointerException e) {
+        if (userDto.getEmail() == null) {
             return;
-        }
-    }
-
-
-    private boolean validationEmail(User user, UserDto userDto) {
-        if (!userDto.getEmail().isBlank()) {
+        } else {
             for (User user1 : userRepository.getAll()) {
                 if (user1.getEmail().equals(userDto.getEmail()) && (!user.getId().equals(user1.getId()))) {
-                    return true;
+                    throw new DuplicateException("Эта почта уже используется, введите другую.");
                 }
             }
+            user.setEmail(userDto.getEmail());
         }
-        return false;
     }
 }

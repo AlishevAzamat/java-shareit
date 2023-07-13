@@ -2,13 +2,10 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * TODO Sprint add-controllers.
@@ -18,42 +15,30 @@ import static java.util.stream.Collectors.toList;
 @RequestMapping("/items")
 public class ItemController {
     private final ItemService itemService;
-    private final ItemMapper itemMapper;
-    private final UserService userService;
+
 
     @PostMapping
     public ItemDto add(@RequestHeader("X-Sharer-User-Id") long userId, @Valid @RequestBody ItemDto itemDto) {
-        Item item = itemMapper.toItem(itemDto);
-        User user = userService.getById(userId);
-        return itemMapper.toItemDtoUser(itemService.add(userId, item), user);
+        return itemService.add(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto update(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId, @RequestBody ItemDto itemDto) {
-        User user = userService.getById(userId);
-        return itemMapper.toItemDtoUser(itemService.update(userId, itemId, itemDto), user);
+        return itemService.update(userId, itemId, itemDto);
     }
 
     @GetMapping("/{itemId}")
     public ItemDto getById(@PathVariable long itemId) {
-        Long item = itemService.getById(itemId).getOwner().getId();
-        User user = userService.getById(item);
-        return itemMapper.toItemDtoUser(itemService.getById(itemId), user);
+        return itemService.getById(itemId);
     }
 
     @GetMapping
     public List<ItemDto> getAll(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return itemService.getAll(userId)
-                .stream()
-                .map(itemMapper::toItemDto)
-                .collect(toList());
+        return itemService.getAll(userId);
     }
 
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestHeader("X-Sharer-User-Id") long userId, @RequestParam String text) {
-        return itemService.searchText(userId, text)
-                .stream()
-                .map(itemMapper::toItemDto)
-                .collect(toList());
+        return itemService.searchText(userId, text);
     }
 }
