@@ -2,7 +2,11 @@ package ru.practicum.shareit.item;
 
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 public class ItemRepositoryImpl implements ItemRepository {
@@ -39,31 +43,19 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public List<Item> getAllByOwnerId(long id) {
-        return findByOwnerId(id);
-    }
-
-    @Override
-    public List<Item> findByText(long userId, String str) {
-        List<Item> userItems = new ArrayList<>();
-        if (str.isBlank()) {
-            return new ArrayList<>();
-        } else {
-            for (Item item : items.values()) {
-                if (item.toString().toLowerCase().contains(str.toLowerCase()) && !Objects.equals(item.isAvailable(), false)) {
-                    userItems.add(item);
-                }
-            }
-        }
-        return userItems;
-    }
-
-    private List<Item> findByOwnerId(long userId) {
         List<Item> userItems = new ArrayList<>();
         for (Item item : items.values()) {
-            if (item.getOwner().getId().equals(userId)) {
+            if (item.getOwner().getId().equals(id)) {
                 userItems.add(item);
             }
         }
         return userItems;
+    }
+
+    @Override
+    public List<Item> findByText(long userId, String str) {
+        return items.values().stream()
+                .filter(item -> item.toString().toLowerCase().contains(str.toLowerCase()) && item.isAvailable())
+                .collect(Collectors.toList());
     }
 }

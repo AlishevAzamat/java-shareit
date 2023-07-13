@@ -9,6 +9,7 @@ import ru.practicum.shareit.user.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -59,25 +60,24 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getAll(long userId) {
-        List<ItemDto> itemDto = new ArrayList<>();
-        for (Item item : itemRepository.getAllByOwnerId(userId)) {
-            ItemDto itemToDto = itemMapper.toItemDto(item);
-            itemDto.add(itemToDto);
-        }
-        log.info("Получен список вещей - количество {}", itemDto);
-        return itemDto;
+        List<Item> items = itemRepository.getAllByOwnerId(userId);
+        log.info("Получен список вещей - количество {}", items.size());
+        return items.stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ItemDto> searchText(long userId, String str) {
-        List<ItemDto> itemDto = new ArrayList<>();
-        for (Item item : itemRepository.findByText(userId, str)) {
-            ItemDto itemToDto = itemMapper.toItemDto(item);
-            itemDto.add(itemToDto);
+        if (str.isBlank()) {
+            return new ArrayList<>();
         }
+        List<Item> items = itemRepository.findByText(userId, str);
         log.info("Поиск вещи {}", str);
-        log.info("Получена вещь {}", itemDto);
-        return itemDto;
+        log.info("Получена вещь {}", items);
+        return items.stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     private void updateName(Item item, ItemDto itemDto) {

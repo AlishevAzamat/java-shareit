@@ -42,11 +42,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public boolean checkEmail(UserDto userDto) {
-        for (User user : users.values()) {
-            if (user.getEmail().equals(userDto.getEmail())) {
-                return true;
-            }
-        }
-        return false;
+        return users.values().stream()
+                .anyMatch(user -> user.getEmail().equals(userDto.getEmail()));
     }
 }
