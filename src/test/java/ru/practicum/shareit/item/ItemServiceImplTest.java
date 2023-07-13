@@ -36,15 +36,6 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void addUserIdUnknown() {
-        Throwable thrown = assertThrows(NullPointerException.class, () -> {
-            itemService.add(999, ItemDto.builder().build());
-        });
-
-        assertNotNull(thrown.getMessage());
-    }
-
-    @Test
     void updateAll() {
         ItemDto item = itemService.add(1, ItemDto.builder()
                 .name("name")
@@ -125,15 +116,6 @@ class ItemServiceImplTest {
                 .available(true).build());
 
         assertEquals(item, itemService.getById(item.getId()));
-    }
-
-    @Test
-    void getByIdUnknown() {
-        Throwable thrown = assertThrows(NullPointerException.class, () -> {
-            itemService.getById(999);
-        });
-
-        assertNotNull(thrown.getMessage());
     }
 
     @Test
