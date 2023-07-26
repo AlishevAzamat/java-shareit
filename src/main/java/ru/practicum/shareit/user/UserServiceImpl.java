@@ -3,10 +3,11 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.DuplicateException;
+import ru.practicum.shareit.exception.ParameterNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,44 +18,47 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto add(UserDto userDto) {
-        if (userRepository.checkEmail(userDto)) {
-            throw new DuplicateException("Почта существует");
-        }
-        User user = userRepository.add(userMapper.toUser(userDto));
+        User user = userRepository.save(userMapper.toUser(userDto));
         log.info("Создан пользователь {}", user);
         return userMapper.toUserDto(user);
     }
 
     @Override
     public UserDto update(Long id, UserDto userDto) {
-        User user = userRepository.getById(id);
+        User user = getById(id);
         updateName(user, userDto);
         updateEmail(user, userDto);
+        userRepository.save(user);
         log.info("Пользователь обновлен {}", user);
         return userMapper.toUserDto(user);
     }
 
     @Override
     public void delete(long id) {
-        userRepository.delete(id);
-        log.info("Пользователь {} удален", userRepository.getById(id));
+        getById(id);
+        userRepository.deleteById(id);
+        log.info("Пользователь под ID - {} удален", id);
     }
 
     @Override
     public User getById(long id) {
-        User user = userRepository.getById(id);
-        log.info("Запрошен пользователь {} ", userRepository.getById(id));
-        return user;
+        Optional<User> user = userRepository.findById(id);
+        if (user.isEmpty()) {
+            throw new ParameterNotFoundException("Пользователь не найден");
+        } else {
+            log.info("Запрошен пользователь {} ", user);
+            return user.get();
+        }
     }
 
     @Override
     public List<UserDto> getAll() {
         List<UserDto> userDto = new ArrayList<>();
-        for (User users : userRepository.getAll()) {
+        for (User users : userRepository.findAll()) {
             UserDto userDtoNew = userMapper.toUserDto(users);
             userDto.add(userDtoNew);
         }
-        log.info("Запрошен список пользователей, количество - {}", userRepository.getAll().size());
+        log.info("Запрошен список пользователей, количество - {}", userRepository.findAll().size());
         return userDto;
     }
 
@@ -70,11 +74,6 @@ public class UserServiceImpl implements UserService {
         if (userDto.getEmail() == null) {
             return;
         } else {
-            for (User user1 : userRepository.getAll()) {
-                if (user1.getEmail().equals(userDto.getEmail()) && (!user.getId().equals(user1.getId()))) {
-                    throw new DuplicateException("Эта почта уже используется, введите другую.");
-                }
-            }
             user.setEmail(userDto.getEmail());
         }
     }
