@@ -22,7 +22,7 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToOne
+    @ManyToOne
     private User owner;
     @Column(nullable = false)
     private String name;

@@ -19,7 +19,6 @@ import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -37,14 +36,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto add(long id, ItemDto itemDto) {
-        User user = userService.getById(id);
+        userService.getById(id);
         Item item = itemMapper.toItem(itemDto);
-        if (user == null) {
-            throw new ParameterNotFoundException("Пользователь не найден");
-        } else {
-            item.setOwner(userService.getById(id));
-            itemRepository.save(item);
-        }
+        item.setOwner(userService.getById(id));
+        itemRepository.save(item);
         log.info("Добавлена вещь {}", item);
         return itemMapper.toItemDto(item);
     }
@@ -67,12 +62,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Item getItem(long id) {
-        Optional<Item> optional = itemRepository.findById(id);
-        if (optional.isEmpty()) {
-            throw new ParameterNotFoundException(String.format("Вещь с id %d - не существует.", id));
-        } else {
-            return optional.get();
-        }
+        return itemRepository.findById(id).orElseThrow(() -> new ParameterNotFoundException("Пользователь не найден"));
     }
 
     @Override
@@ -126,9 +116,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
-        Optional<List<Booking>> bookings =
+        List<Booking> bookings =
                 bookingRepository.findByItemIdAndBookerIdAndEndBeforeAndStatusNotLike(itemId, userId, LocalDateTime.now(), Status.REJECTED);
-        if (bookings.isPresent() && !bookings.get().isEmpty()) {
+        if (!bookings.isEmpty()) {
             Comment comment = commentMapper.toComment(userService
                     .getById(userId), getItem(itemId), commentDto, LocalDateTime.now());
             return commentMapper.toCommentDto(commentRepository.save(comment));

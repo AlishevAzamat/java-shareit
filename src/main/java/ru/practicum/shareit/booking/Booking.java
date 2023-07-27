@@ -31,7 +31,7 @@ public class Booking {
     @Column(name = "end_date")
     @Future
     private LocalDateTime end;
-    @OneToOne
+    @ManyToOne
     private User booker;
     @ManyToOne
     private Item item;
