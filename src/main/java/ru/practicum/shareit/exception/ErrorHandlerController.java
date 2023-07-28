@@ -39,4 +39,10 @@ public class ErrorHandlerController {
                 "errorMessage", e.getMessage()
         );
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleUnknownStateException(final UnknownStateException e) {
+        return Map.of("error", e.getMessage());
+    }
 }
