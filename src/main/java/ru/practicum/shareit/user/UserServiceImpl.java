@@ -3,6 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.IncorrectParameterException;
 import ru.practicum.shareit.exception.ParameterNotFoundException;
 
 import java.util.ArrayList;
@@ -60,6 +61,15 @@ public class UserServiceImpl implements UserService {
         }
         log.info("Запрошен список пользователей, количество - {}", userRepository.findAll().size());
         return userDto;
+    }
+
+    @Override
+    public User getUser(long id) {
+        if (id < 0) {
+            throw new IncorrectParameterException("id не должно быть меньше 0.");
+        }
+        Optional<User> optional = userRepository.findById(id);
+        return optional.orElseThrow(() -> new ParameterNotFoundException(String.format("Пользователь с id %d - не существует.", id)));
     }
 
     private void updateName(User user, UserDto userDto) {

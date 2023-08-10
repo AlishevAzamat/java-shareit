@@ -8,6 +8,7 @@ import ru.practicum.shareit.user.User;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -19,8 +20,10 @@ public class ItemDto {
     private Long id;
     private User owner;
     @NotEmpty(message = "Имя не должно быть пустым.")
+    @Size(max = 255)
     private String name;
     @NotEmpty(message = "Описание не должно быть пустым.")
+    @Size(max = 512)
     private String description;
     @NotNull
     private Boolean available;
@@ -28,4 +31,5 @@ public class ItemDto {
     private BookingItemDto lastBooking;
     private BookingItemDto nextBooking;
     private List<CommentDto> comments;
+    Long requestId;
 }

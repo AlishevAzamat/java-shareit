@@ -1,6 +1,9 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.IncorrectParameterException;
 import ru.practicum.shareit.exception.ParameterNotFoundException;
@@ -44,21 +47,25 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingDto update(long userId, long bookingId, boolean approved) {
-        Booking booking = getBooking(bookingId);
-        if (booking.getItem().getOwner().getId() == userId) {
-            if (booking.getStatus().equals(Status.APPROVED) || booking.getStatus().equals(Status.REJECTED)) {
-                throw new ValidationException("Вы уже подвертили или отказали бронирование. Повторное действие не возможно.");
-            }
-            if (approved) {
-                booking.setStatus(Status.APPROVED);
+    public BookingDto update(long userId, long bookingId, Boolean approved) {
+        if (Optional.ofNullable(approved).isPresent()) {
+            Booking booking = getBooking(bookingId);
+            if (booking.getItem().getOwner().getId() == userId) {
+                if (booking.getStatus().equals(Status.APPROVED) || booking.getStatus().equals(Status.REJECTED)) {
+                    throw new ValidationException("Вы уже подвертили или отказали бронирование. Повторное действие не возможно.");
+                }
+                if (approved) {
+                    booking.setStatus(Status.APPROVED);
+                } else {
+                    booking.setStatus(Status.REJECTED);
+                }
+                bookingRepository.save(booking);
+                return bookingMapper.toBookingDto(booking);
             } else {
-                booking.setStatus(Status.REJECTED);
+                throw new ParameterNotFoundException("Вы не являетесь владельцем вещи.");
             }
-            bookingRepository.save(booking);
-            return bookingMapper.toBookingDto(booking);
         } else {
-            throw new IncorrectParameterException("Вы не являетесь владельцем вещи.");
+            throw new UnknownStateException("Обязательно должен быть указан approved");
         }
     }
 
@@ -73,30 +80,36 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByUser(long bookerId, String state) {
+    public List<BookingDto> getAllByUser(long bookerId, String stateStr, int from, int size) {
         userService.getById(bookerId);
-        List<Booking> bookings;
+        Page<Booking> bookings;
+        int pageNumber = (int) Math.ceil((double) from / size);
+        State state = State.fromString(stateStr);
         switch (state) {
-            case "ALL":
-                bookings = bookingRepository.findByBookerIdOrderByStartDesc(bookerId);
+            case FUTURE:
+                bookings = bookingRepository.findByBookerIdAndStatusIn(bookerId, Set.of(Status.WAITING, Status.APPROVED),
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "FUTURE":
-                bookings = bookingRepository.findByBookerIdAndStatusInOrderByStartDesc(bookerId, Set.of(Status.WAITING, Status.APPROVED));
+            case REJECTED:
+                bookings = bookingRepository.findByBookerIdAndStatusIs(bookerId, Status.REJECTED,
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "REJECTED":
-                bookings = bookingRepository.findByBookerIdAndStatusIsOrderByStartDesc(bookerId, Status.REJECTED);
+            case WAITING:
+                bookings = bookingRepository.findByBookerIdAndStatusIs(bookerId, Status.WAITING,
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "WAITING":
-                bookings = bookingRepository.findByBookerIdAndStatusIsOrderByStartDesc(bookerId, Status.WAITING);
+            case CURRENT:
+                bookings = bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, LocalDateTime.now(),
+                        LocalDateTime.now(), PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "CURRENT":
-                bookings = bookingRepository.findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId, LocalDateTime.now(), LocalDateTime.now());
+            case PAST:
+                bookings = bookingRepository.findByBookerIdAndEndBefore(bookerId, LocalDateTime.now(),
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "PAST":
-                bookings = bookingRepository.findByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now());
-                break;
+            case ALL:
             default:
-                throw new UnknownStateException("Unknown state: " + state);
+                bookings = bookingRepository.findByBookerId(bookerId, PageRequest.of(pageNumber, size, Sort.by("start").descending()));
+                break;
         }
         return bookings
                 .stream()
@@ -105,30 +118,36 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByOwner(long ownerId, String state) {
+    public List<BookingDto> getAllByOwner(long ownerId, String stateStr, int from, int size) {
         userService.getById(ownerId);
-        List<Booking> bookings;
+        Page<Booking> bookings;
+        int pageNumber = (int) Math.ceil((double) from / size);
+        State state = State.fromString(stateStr);
         switch (state) {
-            case "ALL":
-                bookings = bookingRepository.findByOwnerId(ownerId);
+            case FUTURE:
+                bookings = bookingRepository.findByOwnerIdAndStatusIn(ownerId, Set.of(Status.WAITING, Status.APPROVED),
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "FUTURE":
-                bookings = bookingRepository.findByOwnerIdAndStatusIn(ownerId, Set.of(Status.WAITING, Status.APPROVED));
+            case REJECTED:
+                bookings = bookingRepository.findByOwnerIdAndStatus(ownerId, Status.REJECTED,
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "REJECTED":
-                bookings = bookingRepository.findByOwnerIdAndStatus(ownerId, Status.REJECTED);
+            case WAITING:
+                bookings = bookingRepository.findByOwnerIdAndStatus(ownerId, Status.WAITING,
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "WAITING":
-                bookings = bookingRepository.findByOwnerIdAndStatus(ownerId, Status.WAITING);
+            case CURRENT:
+                bookings = bookingRepository.findByOwnerIdCurrent(ownerId, LocalDateTime.now(),
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "CURRENT":
-                bookings = bookingRepository.findByOwnerIdCurrent(ownerId, LocalDateTime.now());
+            case PAST:
+                bookings = bookingRepository.findByOwnerIdPast(ownerId, LocalDateTime.now(),
+                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
                 break;
-            case "PAST":
-                bookings = bookingRepository.findByOwnerIdPast(ownerId, LocalDateTime.now());
-                break;
+            case ALL:
             default:
-                throw new UnknownStateException("Unknown state: " + state);
+                bookings = bookingRepository.findByOwnerId(ownerId, PageRequest.of(pageNumber, size, Sort.by("start").descending()));
+                break;
         }
         return bookings
                 .stream()
