@@ -257,7 +257,7 @@ class BookingServiceImplTest {
 
     @Test
     void updateApprovedIsNull() {
-        Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
+        Throwable thrown = assertThrows(UnknownStateException.class, () -> {
             service.update(1, 1, null);
         });
 
@@ -277,7 +277,7 @@ class BookingServiceImplTest {
                                 .description("description")
                                 .build())
                         .build()));
-        Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
+        Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
             service.update(1, 1, false);
         });
 
