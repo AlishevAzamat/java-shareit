@@ -11,7 +11,7 @@ class UserMapperTest {
 
     @Test
     @DisplayName("Маппер toUserDto")
-    void User_compareResult_toUserDto() {
+    void user_compareResult_toUserDto() {
         User user = User.builder().id(1L).name("name").email("user@mail").build();
         UserDto userDto = userMapper.toUserDto(user);
 
@@ -22,7 +22,7 @@ class UserMapperTest {
 
     @Test
     @DisplayName("Маппер toUser")
-    void User_compareResult_toUser() {
+    void user_compareResult_toUser() {
         UserDto userDto = UserDto.builder().name("name").email("user@mail").build();
         User user = userMapper.toUser(userDto);
 

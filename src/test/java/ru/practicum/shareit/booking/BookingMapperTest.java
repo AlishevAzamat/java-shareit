@@ -14,7 +14,7 @@ class BookingMapperTest {
 
     @Test
     @DisplayName("Маппер toBookingDto")
-    void Booking_compareResult_toBookingDto() {
+    void booking_compareResult_toBookingDto() {
         Booking booking = Booking.builder()
                 .id(1L)
                 .start(LocalDateTime.now())
@@ -35,7 +35,7 @@ class BookingMapperTest {
 
     @Test
     @DisplayName("Маппер toItemsBookingDto")
-    void Booking_compareResult_toItemsBookingDto() {
+    void booking_compareResult_toItemsBookingDto() {
         Booking booking = Booking.builder()
                 .id(1L)
                 .booker(User.builder().id(1L).name("name").email("user@mail").build())
@@ -48,7 +48,7 @@ class BookingMapperTest {
 
     @Test
     @DisplayName("Маппер toBooking")
-    void Booking_compareResult_toBooking() {
+    void booking_compareResult_toBooking() {
         BookingDto bookingDto = BookingDto.builder().start(LocalDateTime.now()).end(LocalDateTime.now()).build();
         Booking booking = bookingMapper.toBooking(bookingDto);
 

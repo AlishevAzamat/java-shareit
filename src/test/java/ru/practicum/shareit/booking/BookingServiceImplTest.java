@@ -381,7 +381,7 @@ class BookingServiceImplTest {
 
     @Test
     @DisplayName("Запрос брони")
-    void BookingGetById_compareResult_whenBookerWithMapper() {
+    void bookingGetById_compareResult_whenBookerWithMapper() {
         bookingMapper = new BookingMapper();
         bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         Booking booking = Booking.builder()

@@ -110,7 +110,7 @@ class ItemRequestServiceImplTest {
 
     @Test
     @DisplayName("Запрос не найдена -1")
-    void ItemReply_throwIncorrectParameterException_IncorrectCountException() {
+    void itemReply_throwIncorrectParameterException_IncorrectCountException() {
         Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
             service.reply(-1);
         });

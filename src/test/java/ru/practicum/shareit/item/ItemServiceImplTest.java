@@ -325,7 +325,7 @@ class ItemServiceImplTest {
 
     @Test
     @DisplayName("Вывод списка вещей")
-    void ItemGetById_compareResult_whenObjectCorrect() {
+    void itemGetById_compareResult_whenObjectCorrect() {
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(Item.builder()
                 .owner(User.builder().id(1L).build()).build()));
         when(itemMapper.toItemDto(any())).thenReturn(ItemDto.builder().id(1L)
