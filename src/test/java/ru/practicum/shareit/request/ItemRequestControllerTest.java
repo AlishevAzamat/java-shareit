@@ -3,6 +3,7 @@ package ru.practicum.shareit.request;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -24,18 +25,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ItemRequestController.class)
 class ItemRequestControllerTest {
     @MockBean
-    private ItemRequestServiceImpl service;
+    private ItemRequestServiceImpl itemRequestService;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private MockMvc mvc;
 
-    private ItemRequestDto requestDto;
+    private ItemRequestDto itemRequestDto;
 
     @BeforeEach
     void setUp() {
-        requestDto = ItemRequestDto.builder()
+        itemRequestDto = ItemRequestDto.builder()
                 .id(1L)
                 .description("description")
                 .items(new ArrayList<>())
@@ -43,26 +44,28 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void createNewRequest() throws Exception {
-        when(service.add(anyLong(), any()))
-                .thenReturn(requestDto);
+    @DisplayName("Cоздание запроса")
+    void createRequest_compareResult_whenObjectCorrect() throws Exception {
+        when(itemRequestService.add(anyLong(), any()))
+                .thenReturn(itemRequestDto);
 
         mvc.perform(post("/requests")
                         .header("X-Sharer-User-Id", 1)
-                        .content(mapper.registerModule(new JavaTimeModule())
-                                .writeValueAsString(requestDto))
+                        .content(objectMapper.registerModule(new JavaTimeModule())
+                                .writeValueAsString(itemRequestDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(requestDto.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(requestDto.getDescription())));
+                .andExpect(jsonPath("$.id", is(itemRequestDto.getId()), Long.class))
+                .andExpect(jsonPath("$.description", is(itemRequestDto.getDescription())));
     }
 
     @Test
-    void getRequest() throws Exception {
-        when(service.getById(anyLong(), anyLong()))
-                .thenReturn(requestDto);
+    @DisplayName("Вывод запроса 1")
+    void getRequest_compareResult_whenObjectCorrect() throws Exception {
+        when(itemRequestService.getById(anyLong(), anyLong()))
+                .thenReturn(itemRequestDto);
 
         mvc.perform(get("/requests/1")
                         .header("X-Sharer-User-Id", 1)
@@ -70,14 +73,15 @@ class ItemRequestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(requestDto.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(requestDto.getDescription())));
+                .andExpect(jsonPath("$.id", is(itemRequestDto.getId()), Long.class))
+                .andExpect(jsonPath("$.description", is(itemRequestDto.getDescription())));
     }
 
     @Test
-    void getRequestsByUserId() throws Exception {
-        when(service.getAllByUser(anyLong(), anyInt(), anyInt()))
-                .thenReturn(List.of(requestDto));
+    @DisplayName("Вывод запроса по пользователю")
+    void getRequests_compareResult_whenUserId() throws Exception {
+        when(itemRequestService.getAllByUser(anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(itemRequestDto));
 
         mvc.perform(get("/requests")
                         .header("X-Sharer-User-Id", 1)
@@ -85,12 +89,13 @@ class ItemRequestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(requestDto))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(itemRequestDto))));
     }
 
     @Test
-    void getAllRequests() throws Exception {
-        when(service.getAll(anyLong(), anyInt(), anyInt()))
+    @DisplayName("Вывод всех запросов")
+    void getAllRequests_compareResult_whenObjectCorrect() throws Exception {
+        when(itemRequestService.getAll(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of());
 
         mvc.perform(get("/requests/all?from=0&size=5")
@@ -99,12 +104,13 @@ class ItemRequestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of())));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of())));
     }
 
     @Test
-    void getAllRequestsWithSizeZero() throws Exception {
-        when(service.getAll(anyLong(), anyInt(), anyInt()))
+    @DisplayName("Вывод всех запросов пагинация 0")
+    void getAllRequests_isBadRequest_whenSizeZero() throws Exception {
+        when(itemRequestService.getAll(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of());
 
         mvc.perform(get("/requests/all?from=0&size=0")
@@ -116,8 +122,9 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllRequestsWithSizeNegative() throws Exception {
-        when(service.getAll(anyLong(), anyInt(), anyInt()))
+    @DisplayName("Вывод всех запросов пагинация -1")
+    void getAllRequests_isBadRequest_whenSizeNegative() throws Exception {
+        when(itemRequestService.getAll(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of());
 
         mvc.perform(get("/requests/all?from=0&size=-1")
@@ -129,8 +136,9 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllRequestsWithFromNegative() throws Exception {
-        when(service.getAll(anyLong(), anyInt(), anyInt()))
+    @DisplayName("Вывод всех запросов from -1")
+    void getAllRequests_isBadRequest_whenFromNegative() throws Exception {
+        when(itemRequestService.getAll(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of());
 
         mvc.perform(get("/requests/all?from=-1&size=5")
@@ -142,9 +150,10 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getRequestsByUserIdWithSizeZero() throws Exception {
-        when(service.getAllByUser(anyLong(), anyInt(), anyInt()))
-                .thenReturn(List.of(requestDto));
+    @DisplayName("Вывод запросов пользователя пагинация 0")
+    void getRequestsByUserId_isBadRequest_whenSizeZero() throws Exception {
+        when(itemRequestService.getAllByUser(anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(itemRequestDto));
 
         mvc.perform(get("/requests?from=0&size=0")
                         .header("X-Sharer-User-Id", 1)
@@ -155,9 +164,10 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getRequestsByUserIdWithSizeNegative() throws Exception {
-        when(service.getAllByUser(anyLong(), anyInt(), anyInt()))
-                .thenReturn(List.of(requestDto));
+    @DisplayName("Вывод запросов пользователя пагинация -1")
+    void getRequestsByUserId_isBadRequest_whenSizeNegative() throws Exception {
+        when(itemRequestService.getAllByUser(anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(itemRequestDto));
 
         mvc.perform(get("/requests?from=0&size=-1")
                         .header("X-Sharer-User-Id", 1)
@@ -168,9 +178,10 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getRequestsByUserIdWithFromNegative() throws Exception {
-        when(service.getAllByUser(anyLong(), anyInt(), anyInt()))
-                .thenReturn(List.of(requestDto));
+    @DisplayName("Вывод запросов пользователя from -1")
+    void getRequestsByUserId_isBadRequest_whenFromNegative() throws Exception {
+        when(itemRequestService.getAllByUser(anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(itemRequestDto));
 
         mvc.perform(get("/requests?from=-1&size=5")
                         .header("X-Sharer-User-Id", 1)

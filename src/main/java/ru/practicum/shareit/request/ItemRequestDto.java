@@ -24,5 +24,5 @@ public class ItemRequestDto {
     @Size(max = 512)
     private String description;
     private LocalDateTime created;
-    List<ItemDto> items;
+    private List<ItemDto> items;
 }

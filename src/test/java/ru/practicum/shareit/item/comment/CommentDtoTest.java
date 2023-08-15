@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.comment;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;
@@ -23,7 +24,8 @@ class CommentDtoTest {
     }
 
     @Test
-    void validateFailDescriptionUser() {
+    @DisplayName("Создание пустого комента")
+    void setComment_compareResult_whenValidateFailDescriptionUser() {
         commentDto.setText("");
 
         Set<ConstraintViolation<CommentDto>> violations = validator.validate(commentDto);

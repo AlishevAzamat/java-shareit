@@ -1,5 +1,6 @@
 package ru.practicum.shareit.request;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -8,14 +9,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ItemRequestMapperTest {
-    private final ItemRequestMapper mapper = new ItemRequestMapper();
+    private final ItemRequestMapper itemRequestMapper = new ItemRequestMapper();
 
     @Test
-    void toItemRequest() {
+    @DisplayName("Маппер toItemRequest")
+    void createRequest_compareResult_toItemRequest() {
         RequestDto requestDto = RequestDto.builder()
                 .description("description")
                 .build();
-        ItemRequest request = mapper.toItemRequest(requestDto);
+        ItemRequest request = itemRequestMapper.toItemRequest(requestDto);
 
         assertEquals(requestDto.getDescription(), request.getDescription(), "не сохроняет description в model");
         assertNull(request.getId(), "id в model не null");
@@ -24,12 +26,13 @@ class ItemRequestMapperTest {
     }
 
     @Test
-    void toItemRequestDto() {
+    @DisplayName("Маппер toItemRequestDto")
+    void createRequest_compareResult_toItemRequestDto() {
         ItemRequest request = ItemRequest.builder()
                 .id(1L)
                 .created(LocalDateTime.now())
                 .description("description").build();
-        ItemRequestDto requestDto = mapper.toItemRequestDto(request);
+        ItemRequestDto requestDto = itemRequestMapper.toItemRequestDto(request);
 
         assertEquals(request.getId(), requestDto.getId(), "id в model не null");
         assertEquals(requestDto.getDescription(), request.getDescription(), "не сохроняет description в model");

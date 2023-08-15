@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,9 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ItemController.class)
 class ItemControllerTest {
     @MockBean
-    private ItemService service;
+    private ItemService itemService;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private MockMvc mvc;
@@ -48,13 +49,14 @@ class ItemControllerTest {
     }
 
     @Test
-    void createNewItem() throws Exception {
-        when(service.add(anyLong(), any()))
+    @DisplayName("Создание вещи")
+    void createItem_compareResult_whenObjectCorrect() throws Exception {
+        when(itemService.add(anyLong(), any()))
                 .thenReturn(itemDto);
 
         mvc.perform(post("/items")
                         .header("X-Sharer-User-Id", 1)
-                        .content(mapper.writeValueAsString(itemDto))
+                        .content(objectMapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -65,13 +67,14 @@ class ItemControllerTest {
     }
 
     @Test
-    void createNewComment() throws Exception {
-        when(service.addComment(anyLong(), anyLong(), any()))
+    @DisplayName("Создание комента")
+    void createComment_compareResult_whenObjectCorrect() throws Exception {
+        when(itemService.addComment(anyLong(), anyLong(), any()))
                 .thenReturn(commentDto);
 
         mvc.perform(post("/items/1/comment")
                         .header("X-Sharer-User-Id", 1)
-                        .content(mapper.writeValueAsString(commentDto))
+                        .content(objectMapper.writeValueAsString(commentDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -81,15 +84,16 @@ class ItemControllerTest {
     }
 
     @Test
-    void updateItem() throws Exception {
+    @DisplayName("Обновление вещи")
+    void updateItem_compareResult_whenObjectCorrect() throws Exception {
         itemDto.setName("Need pen");
 
-        when(service.update(anyLong(), anyLong(), any()))
+        when(itemService.update(anyLong(), anyLong(), any()))
                 .thenReturn(itemDto);
 
         mvc.perform(patch("/items/1")
                         .header("X-Sharer-User-Id", 1)
-                        .content(mapper.writeValueAsString(itemDto))
+                        .content(objectMapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -100,8 +104,9 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItem() throws Exception {
-        when(service.getById(anyLong(), anyLong()))
+    @DisplayName("Вывод вещи")
+    void getItem_compareResult_whenObjectCorrect() throws Exception {
+        when(itemService.getById(anyLong(), anyLong()))
                 .thenReturn(itemDto);
 
         mvc.perform(get("/items/1")
@@ -115,8 +120,9 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItemsWithoutSize() throws Exception {
-        when(service.getAll(anyLong(), anyInt(), anyInt()))
+    @DisplayName("Вывод вещи без пагинации")
+    void getItems_compareResult_whenDefaultSize() throws Exception {
+        when(itemService.getAll(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemDto));
 
         mvc.perform(get("/items")
@@ -125,12 +131,13 @@ class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(itemDto))));
     }
 
     @Test
-    void getItemsWithSize() throws Exception {
-        when(service.getAll(anyLong(), anyInt(), anyInt()))
+    @DisplayName("Вывод вещи c пагинацией")
+    void getItems_compareResult_whenSize5() throws Exception {
+        when(itemService.getAll(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemDto));
 
         mvc.perform(get("/items?from=0&size=5")
@@ -139,12 +146,13 @@ class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(itemDto))));
     }
 
     @Test
-    void searchItemsWithoutSize() throws Exception {
-        when(service.searchText(anyLong(), anyString(), anyInt(), anyInt()))
+    @DisplayName("Поиск вещи без пагинации")
+    void searchItems_compareResult_whenDefaultSize() throws Exception {
+        when(itemService.searchText(anyLong(), anyString(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemDto));
 
         mvc.perform(get("/items/search?text=description")
@@ -153,12 +161,13 @@ class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(itemDto))));
     }
 
     @Test
-    void searchItemsWithSize() throws Exception {
-        when(service.searchText(anyLong(), anyString(), anyInt(), anyInt()))
+    @DisplayName("Поиск вещи c пагинацией")
+    void searchItems_compareResult_whenSize5() throws Exception {
+        when(itemService.searchText(anyLong(), anyString(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemDto));
 
         mvc.perform(get("/items/search?text=description&from=0&size=5")
@@ -167,11 +176,12 @@ class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(itemDto))));
     }
 
     @Test
-    void searchItemsWithSizeZero() throws Exception {
+    @DisplayName("Поиск вещи c пагинацией 0")
+    void searchItems_isBadRequest_whenSizeZero() throws Exception {
         mvc.perform(get("/items/search?text=description&from=0&size=0")
                         .header("X-Sharer-User-Id", 1)
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -181,7 +191,8 @@ class ItemControllerTest {
     }
 
     @Test
-    void searchItemsWithSizeNegative() throws Exception {
+    @DisplayName("Поиск вещи c пагинацией -1")
+    void searchItems_isBadRequest_whenSizeNegative() throws Exception {
         mvc.perform(get("/items/search?text=description&from=0&size=-1")
                         .header("X-Sharer-User-Id", 1)
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -191,7 +202,8 @@ class ItemControllerTest {
     }
 
     @Test
-    void searchItemsWithFromNegative() throws Exception {
+    @DisplayName("Поиск вещи -1")
+    void searchItems_isBadRequest_whenFromNegative() throws Exception {
         mvc.perform(get("/items/search?text=description&from=-1&size=1")
                         .header("X-Sharer-User-Id", 1)
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -201,7 +213,8 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItemsWithSizeZero() throws Exception {
+    @DisplayName("вывод вещи c пагинацией 0")
+    void getItems_isBadRequest_whenSizeZero() throws Exception {
         mvc.perform(get("/items?from=0&size=0")
                         .header("X-Sharer-User-Id", 1)
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -211,7 +224,8 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItemsWithSizeNegative() throws Exception {
+    @DisplayName("вывод вещи c пагинацией -1")
+    void getItems_isBadRequest_whenSizeNegative() throws Exception {
         mvc.perform(get("/items?from=0&size=-1")
                         .header("X-Sharer-User-Id", 1)
                         .characterEncoding(StandardCharsets.UTF_8)
@@ -221,7 +235,8 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItemsWithFromNegative() throws Exception {
+    @DisplayName("вывод вещи -1")
+    void getItems_isBadRequest_whenFromNegative() throws Exception {
         mvc.perform(get("/items?from=-1&size=1")
                         .header("X-Sharer-User-Id", 1)
                         .characterEncoding(StandardCharsets.UTF_8)

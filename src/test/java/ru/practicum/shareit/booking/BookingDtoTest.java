@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;
@@ -24,7 +25,8 @@ class BookingDtoTest {
     }
 
     @Test
-    void validateFailEndBooker() {
+    @DisplayName("Валидация конца бронирования")
+    void validateBooking_compareResult_whenFailEndBooker() {
         bookingDto.setEnd(null);
 
         Set<ConstraintViolation<BookingDto>> violations = validator.validate(bookingDto);
@@ -32,7 +34,8 @@ class BookingDtoTest {
     }
 
     @Test
-    void validateFailStartBooker() {
+    @DisplayName("Валидация старта бронирования")
+    void validateBooking_compareResult_whenFailStartBooker() {
         bookingDto.setStart(null);
 
         Set<ConstraintViolation<BookingDto>> violations = validator.validate(bookingDto);

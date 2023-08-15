@@ -1,17 +1,19 @@
 package ru.practicum.shareit.user;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class UserMapperTest {
-    private final UserMapper mapper = new UserMapper();
+    private final UserMapper userMapper = new UserMapper();
 
     @Test
-    void toUserDto() {
+    @DisplayName("Маппер toUserDto")
+    void User_compareResult_toUserDto() {
         User user = User.builder().id(1L).name("name").email("user@mail").build();
-        UserDto userDto = mapper.toUserDto(user);
+        UserDto userDto = userMapper.toUserDto(user);
 
         assertEquals(user.getId(), userDto.getId(), "не сохроняет id в dto");
         assertEquals(user.getName(), userDto.getName(), "не сохроняет name в dto");
@@ -19,9 +21,10 @@ class UserMapperTest {
     }
 
     @Test
-    void toUser() {
+    @DisplayName("Маппер toUser")
+    void User_compareResult_toUser() {
         UserDto userDto = UserDto.builder().name("name").email("user@mail").build();
-        User user = mapper.toUser(userDto);
+        User user = userMapper.toUser(userDto);
 
         assertNull(user.getId(), "id не null в model");
         assertEquals(userDto.getName(), user.getName(), "не сохроняет name в model");

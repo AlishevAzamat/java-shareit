@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -21,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DataJpaTest
 class BookingRepositoryTest {
     @Autowired
-    private BookingRepository repository;
+    private BookingRepository bookingRepository;
 
     @Autowired
     private ItemRepository itemRepository;
@@ -33,7 +34,7 @@ class BookingRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository.deleteAll();
+        bookingRepository.deleteAll();
         itemRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -42,16 +43,17 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findByOwnerIdAndStatusIn() {
+    @DisplayName("Вывод бронирования")
+    void saveBooking_compareResult_whenOwnerIdAndStatusIn() {
         Booking booking = Booking.builder().status(Status.WAITING).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
         Booking booking1 = Booking.builder().status(Status.REJECTED).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
 
-        booking = repository.save(booking);
-        repository.save(booking1);
+        booking = bookingRepository.save(booking);
+        bookingRepository.save(booking1);
 
-        List<Booking> bookings = repository.findByOwnerIdAndStatusIn(user.getId(), Set.of(Status.WAITING, Status.APPROVED),
+        List<Booking> bookings = bookingRepository.findByOwnerIdAndStatusIn(user.getId(), Set.of(Status.WAITING, Status.APPROVED),
                 PageRequest.of(0, 2)).stream().collect(toList());
 
         assertNotNull(bookings, "Не возвращает список");
@@ -60,16 +62,17 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findByOwnerIdAndStatus() {
+    @DisplayName("Вывод бронирования без условия статуса")
+    void saveBooking_compareResult_whenOwnerIdAndStatus() {
         Booking booking = Booking.builder().status(Status.WAITING).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
         Booking booking1 = Booking.builder().status(Status.REJECTED).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
 
-        repository.save(booking);
-        booking1 = repository.save(booking1);
+        bookingRepository.save(booking);
+        booking1 = bookingRepository.save(booking1);
 
-        List<Booking> bookings = repository.findByOwnerIdAndStatus(user.getId(), Status.REJECTED,
+        List<Booking> bookings = bookingRepository.findByOwnerIdAndStatus(user.getId(), Status.REJECTED,
                 PageRequest.of(0, 2)).stream().collect(toList());
 
         assertNotNull(bookings, "Не возвращает список");
@@ -78,16 +81,17 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findByOwnerId() {
+    @DisplayName("Вывод бронирования пользователя")
+    void saveBooking_compareResult_whenOwnerId() {
         Booking booking = Booking.builder().status(Status.WAITING).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
         Booking booking1 = Booking.builder().status(Status.REJECTED).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
 
-        booking = repository.save(booking);
-        booking1 = repository.save(booking1);
+        booking = bookingRepository.save(booking);
+        booking1 = bookingRepository.save(booking1);
 
-        List<Booking> bookings = repository.findByOwnerId(user.getId(), PageRequest.of(0, 2))
+        List<Booking> bookings = bookingRepository.findByOwnerId(user.getId(), PageRequest.of(0, 2))
                 .stream().collect(toList());
 
         assertNotNull(bookings, "Не возвращает список");
@@ -97,16 +101,17 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findByOwnerIdCurrent() {
+    @DisplayName("Вывод текушего бронирования")
+    void saveBooking_compareResult_whenOwnerIdCurrent() {
         Booking booking = Booking.builder().status(Status.WAITING).item(item)
                 .end(LocalDateTime.now()).start(LocalDateTime.now()).build();
         Booking booking1 = Booking.builder().status(Status.REJECTED).item(item)
                 .end(LocalDateTime.now().plusDays(1)).start(LocalDateTime.now().minusDays(1)).build();
 
-        repository.save(booking);
-        booking1 = repository.save(booking1);
+        bookingRepository.save(booking);
+        booking1 = bookingRepository.save(booking1);
 
-        List<Booking> bookings = repository.findByOwnerIdCurrent(user.getId(), LocalDateTime.now(),
+        List<Booking> bookings = bookingRepository.findByOwnerIdCurrent(user.getId(), LocalDateTime.now(),
                 PageRequest.of(0, 2)).stream().collect(toList());
 
         assertNotNull(bookings, "Не возвращает список");
@@ -115,16 +120,17 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findByOwnerIdPast() {
+    @DisplayName("Вывод прошлого бронирования")
+    void saveBooking_compareResult_whenOwnerIdPast() {
         Booking booking = Booking.builder().status(Status.WAITING).item(item)
                 .end(LocalDateTime.now().plusDays(1)).start(LocalDateTime.now()).build();
         Booking booking1 = Booking.builder().status(Status.REJECTED).item(item)
                 .end(LocalDateTime.now().minusDays(1)).start(LocalDateTime.now()).build();
 
-        repository.save(booking);
-        booking1 = repository.save(booking1);
+        bookingRepository.save(booking);
+        booking1 = bookingRepository.save(booking1);
 
-        List<Booking> bookings = repository.findByOwnerIdPast(user.getId(), LocalDateTime.now(),
+        List<Booking> bookings = bookingRepository.findByOwnerIdPast(user.getId(), LocalDateTime.now(),
                 PageRequest.of(0, 2)).stream().collect(toList());
 
         assertNotNull(bookings, "Не возвращает список");

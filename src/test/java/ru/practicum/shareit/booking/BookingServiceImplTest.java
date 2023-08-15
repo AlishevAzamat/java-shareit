@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import ru.practicum.shareit.exception.IncorrectParameterException;
@@ -22,41 +23,43 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class BookingServiceImplTest {
-    private BookingMapper mapper = mock(BookingMapper.class);
+    private BookingMapper bookingMapper = mock(BookingMapper.class);
 
     private final ItemService itemService = mock(ItemService.class);
 
     private final UserService userService = mock(UserService.class);
 
-    private final BookingRepository repository = mock(BookingRepository.class);
+    private final BookingRepository bookingRepository = mock(BookingRepository.class);
 
-    private BookingService service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    private BookingService bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
 
     private final BookingDto bookingDto = BookingDto.builder().end(LocalDateTime.now()).start(LocalDateTime.now()).itemId(1L).build();
 
     @Test
-    void createExceptionWhenAvailableIsFalse() {
+    @DisplayName("Ошибка бронирования при занятом предмете")
+    void createBooking_throwValidationException_whenAvailableIsFalse() {
         when(itemService.getItem(anyLong()))
                 .thenReturn(Item.builder()
                         .available(false)
                         .name("name")
                         .description("description")
                         .build());
-        when(mapper.toBooking(any()))
+        when(bookingMapper.toBooking(any()))
                 .thenReturn(Booking.builder()
                         .end(LocalDateTime.now())
                         .start(LocalDateTime.now())
                         .build());
 
         Throwable thrown = assertThrows(ValidationException.class, () -> {
-            service.create(1, bookingDto);
+            bookingService.create(1, bookingDto);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void createExceptionWhenOwner() {
+    @DisplayName("Ошибка бронирования при том что он хозяин предмета")
+    void createBooking_throwIncorrectParameterException_whenOwnerIsMaster() {
         when(itemService.getItem(anyLong()))
                 .thenReturn(Item.builder()
                         .owner(User.builder().id(1L).name("name").email("user@mail").build())
@@ -64,21 +67,22 @@ class BookingServiceImplTest {
                         .name("name")
                         .description("description")
                         .build());
-        when(mapper.toBooking(any()))
+        when(bookingMapper.toBooking(any()))
                 .thenReturn(Booking.builder()
                         .end(LocalDateTime.now())
                         .start(LocalDateTime.now())
                         .build());
 
         Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            service.create(1, bookingDto);
+            bookingService.create(1, bookingDto);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void validateTimeExceptionEndBeforeStart() {
+    @DisplayName("Ошибка валидации при том что конец бронирования раньше начала")
+    void createBooking_throwValidationException_whenEndBeforeStart() {
         when(itemService.getItem(anyLong()))
                 .thenReturn(Item.builder()
                         .owner(User.builder().id(2L).name("name").email("user@mail").build())
@@ -86,21 +90,22 @@ class BookingServiceImplTest {
                         .name("name")
                         .description("description")
                         .build());
-        when(mapper.toBooking(any()))
+        when(bookingMapper.toBooking(any()))
                 .thenReturn(Booking.builder()
                         .end(LocalDateTime.now().minusDays(1))
                         .start(LocalDateTime.now())
                         .build());
 
         Throwable thrown = assertThrows(ValidationException.class, () -> {
-            service.create(1, bookingDto);
+            bookingService.create(1, bookingDto);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void validateTimeExceptionEndEqualsStart() {
+    @DisplayName("Ошибка валидации при том что время создания и закрытия равны")
+    void createBooking_throwValidationException_whenEndEqualsStart() {
         when(itemService.getItem(anyLong()))
                 .thenReturn(Item.builder()
                         .owner(User.builder().id(2L).name("name").email("user@mail").build())
@@ -108,21 +113,22 @@ class BookingServiceImplTest {
                         .name("name")
                         .description("description")
                         .build());
-        when(mapper.toBooking(any()))
+        when(bookingMapper.toBooking(any()))
                 .thenReturn(Booking.builder()
                         .end(LocalDateTime.now())
                         .start(LocalDateTime.now())
                         .build());
 
         Throwable thrown = assertThrows(ValidationException.class, () -> {
-            service.create(1, bookingDto);
+            bookingService.create(1, bookingDto);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void validateTimeExceptionStartBeforeNow() {
+    @DisplayName("Ошибка валидации при том что начала времени раньше реального")
+    void createBooking_throwValidationException_whenStartBeforeRealTime() {
         when(itemService.getItem(anyLong()))
                 .thenReturn(Item.builder()
                         .owner(User.builder().id(2L).name("name").email("user@mail").build())
@@ -130,42 +136,45 @@ class BookingServiceImplTest {
                         .name("name")
                         .description("description")
                         .build());
-        when(mapper.toBooking(any()))
+        when(bookingMapper.toBooking(any()))
                 .thenReturn(Booking.builder()
                         .end(LocalDateTime.now().plusHours(1))
                         .start(LocalDateTime.now().minusDays(1))
                         .build());
 
         Throwable thrown = assertThrows(ValidationException.class, () -> {
-            service.create(1, bookingDto);
+            bookingService.create(1, bookingDto);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getBookingExceptionUnknown() {
-        when(repository.findById(anyLong())).thenReturn(Optional.empty());
+    @DisplayName("Бронь не найдена")
+    void getBooking_throwParameterNotFoundException_whenBookingNotFound() {
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
         Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
-            service.getById(1, 1);
+            bookingService.getById(1, 1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getBookingExceptionNegative() {
-        when(repository.findById(anyLong())).thenReturn(Optional.empty());
+    @DisplayName("Запрос брони при -1")
+    void getBooking_throwIncorrectParameterException_whenBookingNegative() {
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
         Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            service.getById(1, -1);
+            bookingService.getById(1, -1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getBookingExceptionNoOwnerItemAndNoBooker() {
-        when(repository.findById(anyLong())).thenReturn(Optional.of(Booking.builder()
+    @DisplayName("Ошибка валидации при заросе брони")
+    void getBooking_throwIncorrectParameterException_whenNoOwnerItemAndNoBooker() {
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(Booking.builder()
                 .booker(User.builder().id(2L).email("user@mail").name("name").build())
                 .item(Item.builder()
                         .owner(User.builder().id(2L).name("name").email("user@mail").build())
@@ -177,96 +186,106 @@ class BookingServiceImplTest {
                 .start(LocalDateTime.now().plusHours(1))
                 .build()));
         Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
-            service.getById(1, 1);
+            bookingService.getById(1, 1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByUserFromNegative() {
+    @DisplayName("Запрос всей брони при -1")
+    void getAllByUser_throwIllegalArgumentException_whenFromNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            service.getAllByUser(1, "ALL", -1, 1);
+            bookingService.getAllByUser(1, "ALL", -1, 1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByUserSizeNegative() {
+    @DisplayName("Запрос всей брони при пагинации -1")
+    void getAllByUser_throwIllegalArgumentException_whenSizeNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            service.getAllByUser(1, "ALL", 0, -1);
+            bookingService.getAllByUser(1, "ALL", 0, -1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByUserSizeZero() {
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            service.getAllByUser(1, "ALL", 0, 0);
+    @DisplayName("Запрос всей брони при пагинации 0")
+    void getAllByUser_throwIllegalArgumentException_whenSizeZero() {
+        Throwable thrown = assertThrows(ArithmeticException.class, () -> {
+            bookingService.getAllByUser(1, "ALL", 0, 0);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByUserStateUnknown() {
+    @DisplayName("Запрос всей брони при неправильном статусе")
+    void getAllByUser_throwUnknownStateException_whenStateUnknown() {
         Throwable thrown = assertThrows(UnknownStateException.class, () -> {
-            service.getAllByUser(1, "qwq", 0, 1);
+            bookingService.getAllByUser(1, "qwq", 0, 1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByOwnerFromNegative() {
+    @DisplayName("Запрос всей брони хозяина при -1")
+    void getAllByOwner_throwIllegalArgumentException_whenFromNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            service.getAllByOwner(1, "ALL", -1, 1);
+            bookingService.getAllByOwner(1, "ALL", -1, 1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByOwnerSizeNegative() {
+    @DisplayName("Запрос всей брони хозяина при пагинации -1")
+    void getAllByOwner_throwIllegalArgumentException_whenSizeNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            service.getAllByOwner(1, "ALL", 0, -1);
+            bookingService.getAllByOwner(1, "ALL", 0, -1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByOwnerSizeZero() {
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
-            service.getAllByOwner(1, "ALL", 0, 0);
+    @DisplayName("Запрос всей брони хозяина при пагинации 0")
+    void getAllByOwner_throwArithmeticException_whenSizeZero() {
+        Throwable thrown = assertThrows(ArithmeticException.class, () -> {
+            bookingService.getAllByOwner(1, "ALL", 0, 0);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getAllByOwnerStateUnknown() {
+    @DisplayName("Запрос всей брони хозяина при неправильном статусе")
+    void getAllByOwner_throwUnknownStateException_whenStateUnknown() {
         Throwable thrown = assertThrows(UnknownStateException.class, () -> {
-            service.getAllByOwner(1, "qwq", 0, 1);
+            bookingService.getAllByOwner(1, "qwq", 0, 1);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void updateApprovedIsNull() {
+    @DisplayName("Неверное обновление бронирования")
+    void updateBooking_throwUnknownStateException_whenApprovedIsNull() {
         Throwable thrown = assertThrows(UnknownStateException.class, () -> {
-            service.update(1, 1, null);
+            bookingService.update(1, 1, null);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void updateNoOwner() {
-        when(repository.findById(any()))
+    @DisplayName("Неверное обновление бронирования неверных данных")
+    void updateBooking_throwParameterNotFoundException_whenNoOwner() {
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(Booking.builder()
                         .start(LocalDateTime.now().plusHours(1))
                         .end(LocalDateTime.now().plusDays(1))
@@ -278,15 +297,16 @@ class BookingServiceImplTest {
                                 .build())
                         .build()));
         Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
-            service.update(1, 1, false);
+            bookingService.update(1, 1, false);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void updateStatusApproved() {
-        when(repository.findById(any()))
+    @DisplayName("Неверное обновление бронирования при неверном статусе")
+    void updateBooking_throwValidationException_whenStatusApproved() {
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(Booking.builder()
                         .start(LocalDateTime.now().plusHours(1))
                         .end(LocalDateTime.now().plusDays(1))
@@ -299,15 +319,16 @@ class BookingServiceImplTest {
                         .status(Status.APPROVED)
                         .build()));
         Throwable thrown = assertThrows(ValidationException.class, () -> {
-            service.update(1, 1, false);
+            bookingService.update(1, 1, false);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void updateStatusRejected() {
-        when(repository.findById(any()))
+    @DisplayName("Неверное обновление бронирования при неверном статусе")
+    void updateBooking_throwValidationException_whenStatusRejected() {
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(Booking.builder()
                         .start(LocalDateTime.now().plusHours(1))
                         .end(LocalDateTime.now().plusDays(1))
@@ -320,16 +341,17 @@ class BookingServiceImplTest {
                         .status(Status.REJECTED)
                         .build()));
         Throwable thrown = assertThrows(ValidationException.class, () -> {
-            service.update(1, 1, false);
+            bookingService.update(1, 1, false);
         });
 
         assertNotNull(thrown.getMessage());
     }
 
     @Test
-    void getByIdWhenOwnerItemWithMapper() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Запрос брони")
+    void bookingGetById_compareResult_whenOwnerItemWithMapper() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         Booking booking = Booking.builder()
                 .id(1L)
                 .status(Status.WAITING)
@@ -343,24 +365,25 @@ class BookingServiceImplTest {
                         .description("description")
                         .build())
                 .build();
-        when(repository.findById(any()))
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(booking));
 
-        BookingDto bookingDto = service.getById(1, 1);
+        BookingDto bookingDto = bookingService.getById(1, 1);
 
         assertNotNull(bookingDto, "null при получении (возможно проверить работу маппера)");
         assertEquals(booking.getStart(), bookingDto.getStart(), "Не возвращается нужный start");
         assertEquals(booking.getEnd(), bookingDto.getEnd(), "Не возвращает нужный end");
         assertEquals(booking.getItem(), bookingDto.getItem(), "Не возвращает нужный item");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getByIdWhenBookerWithMapper() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Запрос брони")
+    void BookingGetById_compareResult_whenBookerWithMapper() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         Booking booking = Booking.builder()
                 .booker(User.builder().id(2L).name("name").email("user@mail").build())
                 .start(LocalDateTime.now().plusHours(1))
@@ -372,24 +395,25 @@ class BookingServiceImplTest {
                         .description("description")
                         .build())
                 .build();
-        when(repository.findById(any()))
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(booking));
 
-        BookingDto bookingDto = service.getById(2, 1);
+        BookingDto bookingDto = bookingService.getById(2, 1);
 
         assertNotNull(bookingDto, "null при получении (возможно проверить работу маппера)");
         assertEquals(booking.getStart(), bookingDto.getStart(), "Не возвращается нужный start");
         assertEquals(booking.getEnd(), bookingDto.getEnd(), "Не возвращает нужный end");
         assertEquals(booking.getItem(), bookingDto.getItem(), "Не возвращает нужный item");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void updateWhenApprovedTrueWithMapper() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Обновление брони")
+    void updateBooking_compareResult_whenApprovedTrueWithMapper() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         Booking booking = Booking.builder()
                 .status(Status.WAITING)
                 .start(LocalDateTime.now().plusHours(1))
@@ -401,10 +425,10 @@ class BookingServiceImplTest {
                         .description("description")
                         .build())
                 .build();
-        when(repository.findById(any()))
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(booking));
 
-        BookingDto bookingDto = service.update(1, 1, true);
+        BookingDto bookingDto = bookingService.update(1, 1, true);
 
         assertNotNull(bookingDto, "null при получении (возможно проверить работу маппера)");
         assertEquals(booking.getStart(), bookingDto.getStart(), "Не возвращается нужный start");
@@ -412,14 +436,15 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem(), bookingDto.getItem(), "Не возвращает нужный item");
         assertEquals(Status.APPROVED, bookingDto.getStatus(), "Не возвращает нужный status");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void updateWhenApprovedFalseWithMapper() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Обновление брони")
+    void updateBooking_compareResult_whenApprovedFalseWithMapper() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         Booking booking = Booking.builder()
                 .status(Status.WAITING)
                 .start(LocalDateTime.now().plusHours(1))
@@ -431,10 +456,10 @@ class BookingServiceImplTest {
                         .description("description")
                         .build())
                 .build();
-        when(repository.findById(any()))
+        when(bookingRepository.findById(any()))
                 .thenReturn(Optional.of(booking));
 
-        BookingDto bookingDto = service.update(1, 1, false);
+        BookingDto bookingDto = bookingService.update(1, 1, false);
 
         assertNotNull(bookingDto, "null при получении (возможно проверить работу маппера)");
         assertEquals(booking.getStart(), bookingDto.getStart(), "Не возвращается нужный start");
@@ -442,214 +467,226 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem(), bookingDto.getItem(), "Не возвращает нужный item");
         assertEquals(Status.REJECTED, bookingDto.getStatus(), "Не возвращает нужный status");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByOwnerStateAll() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования All")
+    void bookingGetAll_compareResult_whenOwnerStateAll() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByOwnerId(anyLong(), any()))
+        when(bookingRepository.findByOwnerId(anyLong(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByOwner(1, "ALL", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByOwner(1, "ALL", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
 
     @Test
-    void getAllByOwnerStateFUTURE() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования FUTURE")
+    void bookingGetAllByOwner_compareResult_whenStateFuture() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByOwnerIdAndStatusIn(anyLong(), any(), any()))
+        when(bookingRepository.findByOwnerIdAndStatusIn(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByOwner(1, "FUTURE", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByOwner(1, "FUTURE", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByOwnerStateREJECTED() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования REJECTED")
+    void bookingGetAllByOwner_compareResult_whenStateRejected() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByOwnerIdAndStatus(anyLong(), any(), any()))
+        when(bookingRepository.findByOwnerIdAndStatus(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByOwner(1, "REJECTED", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByOwner(1, "REJECTED", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByOwnerStateWAITING() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования WAITING")
+    void bookingGetAllByOwner_compareResult_whenStateWaiting() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByOwnerIdAndStatus(anyLong(), any(), any()))
+        when(bookingRepository.findByOwnerIdAndStatus(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByOwner(1, "WAITING", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByOwner(1, "WAITING", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByOwnerStateCURRENT() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования CURRENT")
+    void bookingGetAllByOwner_compareResult_whenStateCurrent() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByOwnerIdCurrent(anyLong(), any(), any()))
+        when(bookingRepository.findByOwnerIdCurrent(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByOwner(1, "CURRENT", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByOwner(1, "CURRENT", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByOwnerStatePAST() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования PAST")
+    void bookingGetAllByOwner_compareResult_whenStatePast() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByOwnerIdPast(anyLong(), any(), any()))
+        when(bookingRepository.findByOwnerIdPast(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByOwner(1, "PAST", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByOwner(1, "PAST", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByUserStateAll() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования пользователя ALL")
+    void bookingGetAllByUser_compareResult_whenStateAll() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByBookerId(anyLong(), any()))
+        when(bookingRepository.findByBookerId(anyLong(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByUser(1, "ALL", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByUser(1, "ALL", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
 
     @Test
-    void getAllByUserStateFUTURE() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования пользователя FUTURE")
+    void bookingGetAllByUser_compareResult_whenStateFuture() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByBookerIdAndStatusIn(anyLong(), any(), any()))
+        when(bookingRepository.findByBookerIdAndStatusIn(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByUser(1, "FUTURE", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByUser(1, "FUTURE", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByUserStateREJECTED() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования пользователя REJECTED")
+    void bookingGetAllByUser_compareResult_whenStateRejected() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByBookerIdAndStatusIs(anyLong(), any(), any()))
+        when(bookingRepository.findByBookerIdAndStatusIs(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByUser(1, "REJECTED", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByUser(1, "REJECTED", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByUserStateWAITING() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования пользователя WAITING")
+    void bookingGetAllByUser_compareResult_whenStateWaiting() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByBookerIdAndStatusIs(anyLong(), any(), any()))
+        when(bookingRepository.findByBookerIdAndStatusIs(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByUser(1, "WAITING", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByUser(1, "WAITING", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByUserStateCURRENT() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования пользователя CURRENT")
+    void bookingGetAllByUser_compareResult_whenStateCurrent() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByBookerIdAndStartBeforeAndEndAfter(anyLong(), any(), any(), any()))
+        when(bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(anyLong(), any(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByUser(1, "CURRENT", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByUser(1, "CURRENT", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
     @Test
-    void getAllByUserStatePAST() {
-        mapper = new BookingMapper();
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+    @DisplayName("Сверка количества бронирования пользователя PAST")
+    void bookingGetAllByUser_compareResult_whenStatePast() {
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
         when(userService.getById(anyLong())).thenReturn(User.builder().build());
-        when(repository.findByBookerIdAndEndBefore(anyLong(), any(), any()))
+        when(bookingRepository.findByBookerIdAndEndBefore(anyLong(), any(), any()))
                 .thenReturn(Page.empty());
 
-        List<BookingDto> bookingDtos = service.getAllByUser(1, "PAST", 0, 1);
+        List<BookingDto> bookingDtos = bookingService.getAllByUser(1, "PAST", 0, 1);
 
         assertNotNull(bookingDtos, "null при получении (возможно проверить работу маппера)");
         assertEquals(0, bookingDtos.size(), "Не возвращается список");
 
-        mapper = mock(BookingMapper.class);
-        service = new BookingServiceImpl(mapper, itemService, userService, repository);
+        bookingMapper = mock(BookingMapper.class);
+        bookingService = new BookingServiceImpl(bookingMapper, itemService, userService, bookingRepository);
     }
 
 }

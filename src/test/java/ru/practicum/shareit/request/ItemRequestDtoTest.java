@@ -1,5 +1,6 @@
 package ru.practicum.shareit.request;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;
@@ -12,7 +13,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ItemRequestDtoTest {
-    private final ItemRequestDto requestDto = ItemRequestDto.builder()
+    private final ItemRequestDto itemRequestDto = ItemRequestDto.builder()
             .id(1L)
             .description("description")
             .created(LocalDateTime.now())
@@ -26,15 +27,16 @@ class ItemRequestDtoTest {
     }
 
     @Test
-    void validateFailDescriptionRequest() {
-        requestDto.setDescription("");
+    @DisplayName("Валидация описания запроса")
+    void createRequest_compareResult_whenValidateFailDescriptionRequest() {
+        itemRequestDto.setDescription("");
 
-        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(requestDto);
+        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(itemRequestDto);
         assertEquals(1, violations.size(), "Создаётся пустой description");
 
-        requestDto.setDescription(null);
+        itemRequestDto.setDescription(null);
 
-        violations = validator.validate(requestDto);
+        violations = validator.validate(itemRequestDto);
         assertEquals(1, violations.size(), "Создаётся null description");
     }
 }

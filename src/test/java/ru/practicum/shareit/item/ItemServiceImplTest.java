@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -48,7 +49,8 @@ class ItemServiceImplTest {
                     commentRepository, commentMapper, bookingMapper, itemRequestService);
 
     @Test
-    void updateNoOwner() {
+    @DisplayName("Не существующий пользователь")
+    void updateItem_throwParameterNotFoundException_whenNoOwner() {
         when(userService.getUser(anyLong()))
                 .thenReturn(User.builder().name("name").email("user@mail").build());
         when(itemRepository.findById(anyLong()))
@@ -66,7 +68,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllFromNegative() {
+    @DisplayName("Вывод всех вещей, валидация")
+    void getAllItem_throwIllegalArgumentException_whenFromNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             service.getAll(1, -1, 1);
         });
@@ -75,7 +78,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllSizeNegative() {
+    @DisplayName("Вывод всех вещей, отрицательная пагинация")
+    void getAllItem_throwIllegalArgumentException_whenSizeNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             service.getAll(1, 0, -1);
         });
@@ -84,7 +88,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllSizeZero() {
+    @DisplayName("Вывод всех вещей, пагинация 0")
+    void getAllItem_throwIllegalArgumentException_whenSizeZero() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             service.getAll(1, 0, 0);
         });
@@ -93,7 +98,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchTextFromNegative() {
+    @DisplayName("Поиск по словам вещей from -1")
+    void searchItemText_throwIllegalArgumentException_whenFromNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             service.searchText(1, "text", -1, 1);
         });
@@ -102,7 +108,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchTextSizeNegative() {
+    @DisplayName("Поиск по словам вещей пагинация -1")
+    void searchItemText_throwIllegalArgumentException_whenSizeNegative() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             service.searchText(1, "text", 0, -1);
         });
@@ -111,7 +118,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchTextSizeZero() {
+    @DisplayName("Поиск по словам вещей пагинация 0")
+    void searchItem_throwIllegalArgumentException_whenTextSizeZero() {
         Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
             service.searchText(1, "text", 0, 0);
         });
@@ -120,14 +128,16 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchTextIsEmpty() {
+    @DisplayName("Поиск по словам вещей")
+    void searchItemText_compareResult_whenStrIsEmpty() {
         List<ItemDto> items = service.searchText(1, "", 0, 1);
 
         assertEquals(0, items.size(), "Не возвращает пустой список при пустом тексте");
     }
 
     @Test
-    void addCommentBookingIsEmpty() {
+    @DisplayName("Добавления комента к не сушествующему бронирования")
+    void addComment_throwValidationException_whenBookingIsEmpty() {
         when(bookingRepository.findByItemIdAndBookerIdAndEndBeforeAndStatusNotLike(anyLong(), anyLong(), any(), any()))
                 .thenReturn(List.of());
 
@@ -139,7 +149,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getItemByIdUnknown() {
+    @DisplayName("Вывод не существующего бронирования")
+    void getItemById_throwParameterNotFoundException_whenUnknown() {
         when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
@@ -150,7 +161,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getItemByIdNegative() {
+    @DisplayName("Вывод не существующего бронирования -1")
+    void getItemById_throwParameterNotFoundException_whenNegative() {
         Throwable thrown = assertThrows(ParameterNotFoundException.class, () -> {
             service.getItem(-1);
         });
@@ -159,7 +171,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void updateNameDescriptionAndAvailable() {
+    @DisplayName("Обновление описания и доступности вещи")
+    void updateItem_compareResult_whenNameDescriptionAndAvailable() {
         itemMapper = new ItemMapper();
         service = new ItemServiceImpl(userService, itemRepository, itemMapper, bookingRepository,
                 commentRepository, commentMapper, bookingMapper, itemRequestService);
@@ -184,7 +197,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void updateName() {
+    @DisplayName("Обновление имени вещи")
+    void updateItem_compareResult_whenName() {
         itemMapper = new ItemMapper();
         service = new ItemServiceImpl(userService, itemRepository, itemMapper, bookingRepository,
                 commentRepository, commentMapper, bookingMapper, itemRequestService);
@@ -210,7 +224,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void updateDescription() {
+    @DisplayName("Обновление описания вещи")
+    void updateItem_compareResult_whenDescription() {
         itemMapper = new ItemMapper();
         service = new ItemServiceImpl(userService, itemRepository, itemMapper, bookingRepository,
                 commentRepository, commentMapper, bookingMapper, itemRequestService);
@@ -236,7 +251,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void updateAvailable() {
+    @DisplayName("Обновление доступности вещи")
+    void updateItem_compareResult_whenAvailable() {
         itemMapper = new ItemMapper();
         service = new ItemServiceImpl(userService, itemRepository, itemMapper, bookingRepository,
                 commentRepository, commentMapper, bookingMapper, itemRequestService);
@@ -262,7 +278,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void addComment() {
+    @DisplayName("Добавление комента")
+    void addComment_compareResult_whenObjectCorrect() {
         when(bookingRepository.findByItemIdAndBookerIdAndEndBeforeAndStatusNotLike(anyLong(), anyLong(),
                 any(), any()))
                 .thenReturn(List.of(Booking.builder().id(1L)
@@ -287,7 +304,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchText() {
+    @DisplayName("Поиск вещи по слову")
+    void searchText_compareResult_CorrectWork() {
         when(itemRepository.search(anyString(), any())).thenReturn(Page.empty());
 
         List<ItemDto> itemDtos = service.searchText(1, "text", 0, 1);
@@ -296,7 +314,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllEmpty() {
+    @DisplayName("Вывод пустого списка вещей")
+    void getAllEmpty_compareResult_CorrectWork() {
         when(itemRepository.findByOwnerId(anyLong(), any())).thenReturn(Page.empty());
 
         List<ItemDto> itemDtos = service.getAll(1, 0, 1);
@@ -305,7 +324,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getById() {
+    @DisplayName("Вывод списка вещей")
+    void ItemGetById_compareResult_whenObjectCorrect() {
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(Item.builder()
                 .owner(User.builder().id(1L).build()).build()));
         when(itemMapper.toItemDto(any())).thenReturn(ItemDto.builder().id(1L)
@@ -324,7 +344,8 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllWithManyBooking() {
+    @DisplayName("Вывод списка вещей при бронировании")
+    void getAllItem_compareResult_whenManyBooking() {
         itemMapper = new ItemMapper();
         service = new ItemServiceImpl(userService, itemRepository, itemMapper, bookingRepository,
                 commentRepository, commentMapper, bookingMapper, itemRequestService);

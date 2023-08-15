@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,17 +35,4 @@ public class Booking {
     private Item item;
     @Enumerated(EnumType.STRING)
     private Status status;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Booking)) return false;
-        Booking booking = (Booking) o;
-        return id.equals(booking.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
 }

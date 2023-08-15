@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
@@ -7,10 +8,11 @@ import ru.practicum.shareit.user.User;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ItemMapperTest {
-    private final ItemMapper mapper = new ItemMapper();
+    private final ItemMapper itemMapper = new ItemMapper();
 
     @Test
-    void toItemDtoWithoutRequestId() {
+    @DisplayName("Маппер toItemDtoWithoutRequestId")
+    void createItem_compareResult_toItemDtoWithoutRequestId() {
         Item item = Item.builder()
                 .id(1L)
                 .owner(User.builder().id(1L).email("user@mail").name("name").build())
@@ -18,7 +20,7 @@ class ItemMapperTest {
                 .description("description")
                 .available(true)
                 .build();
-        ItemDto itemDto = mapper.toItemDto(item);
+        ItemDto itemDto = itemMapper.toItemDto(item);
 
         assertEquals(item.getDescription(), itemDto.getDescription(), "description не присваивается в dto");
         assertEquals(item.getName(), itemDto.getName(), "name не присваивается в dto");
@@ -28,7 +30,8 @@ class ItemMapperTest {
     }
 
     @Test
-    void toItemDtoWithRequestId() {
+    @DisplayName("Маппер toItemDtoWithRequestId")
+    void createItem_compareResult_toItemDtoWithRequestId() {
         Item item = Item.builder()
                 .id(1L)
                 .owner(User.builder().id(1L).email("user@mail").name("name").build())
@@ -37,7 +40,7 @@ class ItemMapperTest {
                 .available(true)
                 .request(ItemRequest.builder().id(1L).description("description").build())
                 .build();
-        ItemDto itemDto = mapper.toItemDto(item);
+        ItemDto itemDto = itemMapper.toItemDto(item);
 
         assertEquals(item.getDescription(), itemDto.getDescription(), "description не присваивается в dto");
         assertEquals(item.getName(), itemDto.getName(), "name не присваивается в dto");
@@ -47,13 +50,14 @@ class ItemMapperTest {
     }
 
     @Test
-    void toItem() {
+    @DisplayName("Маппер toItem")
+    void createItem_compareResult_toItem() {
         ItemDto itemDto = ItemDto.builder()
                 .name("name")
                 .description("description")
                 .available(false)
                 .build();
-        Item item = mapper.toItem(itemDto);
+        Item item = itemMapper.toItem(itemDto);
 
         assertEquals(itemDto.getDescription(), item.getDescription(), "description не присваивается в model");
         assertEquals(itemDto.getName(), item.getName(), "name не присваивается в model");

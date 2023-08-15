@@ -17,29 +17,29 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class ItemRequestController {
-    private final ItemRequestService service;
+    private final ItemRequestService itemRequestService;
 
     @PostMapping
     public ItemRequestDto createRequest(@RequestHeader("X-Sharer-User-Id") long userId, @Valid @RequestBody RequestDto requestDto) {
-        return service.add(userId, requestDto);
+        return itemRequestService.add(userId, requestDto);
     }
 
     @GetMapping("/{requestId}")
     public ItemRequestDto getRequest(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long requestId) {
-        return service.getById(userId, requestId);
+        return itemRequestService.getById(userId, requestId);
     }
 
     @GetMapping
     public List<ItemRequestDto> getRequestsByUserId(@RequestHeader("X-Sharer-User-Id") long userId,
                                                     @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                                     @Positive @RequestParam(defaultValue = "10") int size) {
-        return service.getAllByUser(userId, from, size);
+        return itemRequestService.getAllByUser(userId, from, size);
     }
 
     @GetMapping("/all")
     public List<ItemRequestDto> getAllRequests(@RequestHeader("X-Sharer-User-Id") long userId,
                                                @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                                @Positive @RequestParam(defaultValue = "10") int size) {
-        return service.getAll(userId, from, size);
+        return itemRequestService.getAll(userId, from, size);
     }
 }

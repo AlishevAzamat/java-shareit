@@ -16,8 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-import static java.util.stream.Collectors.toList;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -82,77 +81,69 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllByUser(long bookerId, String stateStr, int from, int size) {
         userService.getById(bookerId);
-        Page<Booking> bookings;
-        int pageNumber = (int) Math.ceil((double) from / size);
         State state = State.fromString(stateStr);
-        switch (state) {
-            case FUTURE:
-                bookings = bookingRepository.findByBookerIdAndStatusIn(bookerId, Set.of(Status.WAITING, Status.APPROVED),
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case REJECTED:
-                bookings = bookingRepository.findByBookerIdAndStatusIs(bookerId, Status.REJECTED,
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case WAITING:
-                bookings = bookingRepository.findByBookerIdAndStatusIs(bookerId, Status.WAITING,
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case CURRENT:
-                bookings = bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, LocalDateTime.now(),
-                        LocalDateTime.now(), PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case PAST:
-                bookings = bookingRepository.findByBookerIdAndEndBefore(bookerId, LocalDateTime.now(),
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case ALL:
-            default:
-                bookings = bookingRepository.findByBookerId(bookerId, PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-        }
+        Page<Booking> bookings = createBookingPageForUser(bookerId, state, from, size);
+
         return bookings
                 .stream()
                 .map(bookingMapper::toBookingDto)
-                .collect(toList());
+                .collect(Collectors.toList());
     }
+
+    private Page<Booking> createBookingPageForUser(long bookerId, State state, int from, int size) {
+        int pageNumber = (from + size - 1) / size;
+        PageRequest pageRequest = PageRequest.of(pageNumber, size, Sort.by("start").descending());
+
+        switch (state) {
+            case FUTURE:
+                return bookingRepository.findByBookerIdAndStatusIn(bookerId, Set.of(Status.WAITING, Status.APPROVED), pageRequest);
+            case REJECTED:
+                return bookingRepository.findByBookerIdAndStatusIs(bookerId, Status.REJECTED, pageRequest);
+            case WAITING:
+                return bookingRepository.findByBookerIdAndStatusIs(bookerId, Status.WAITING, pageRequest);
+            case CURRENT:
+                LocalDateTime now = LocalDateTime.now();
+                return bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, now, now, pageRequest);
+            case PAST:
+                return bookingRepository.findByBookerIdAndEndBefore(bookerId, LocalDateTime.now(), pageRequest);
+            case ALL:
+            default:
+                return bookingRepository.findByBookerId(bookerId, pageRequest);
+        }
+    }
+
 
     @Override
     public List<BookingDto> getAllByOwner(long ownerId, String stateStr, int from, int size) {
         userService.getById(ownerId);
-        Page<Booking> bookings;
-        int pageNumber = (int) Math.ceil((double) from / size);
         State state = State.fromString(stateStr);
-        switch (state) {
-            case FUTURE:
-                bookings = bookingRepository.findByOwnerIdAndStatusIn(ownerId, Set.of(Status.WAITING, Status.APPROVED),
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case REJECTED:
-                bookings = bookingRepository.findByOwnerIdAndStatus(ownerId, Status.REJECTED,
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case WAITING:
-                bookings = bookingRepository.findByOwnerIdAndStatus(ownerId, Status.WAITING,
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case CURRENT:
-                bookings = bookingRepository.findByOwnerIdCurrent(ownerId, LocalDateTime.now(),
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case PAST:
-                bookings = bookingRepository.findByOwnerIdPast(ownerId, LocalDateTime.now(),
-                        PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-            case ALL:
-            default:
-                bookings = bookingRepository.findByOwnerId(ownerId, PageRequest.of(pageNumber, size, Sort.by("start").descending()));
-                break;
-        }
+        Page<Booking> bookings = createBookingPage(ownerId, state, from, size);
+
         return bookings
                 .stream()
                 .map(bookingMapper::toBookingDto)
-                .collect(toList());
+                .collect(Collectors.toList());
+    }
+
+    private Page<Booking> createBookingPage(long ownerId, State state, int from, int size) {
+        int pageNumber = (from + size - 1) / size;
+        PageRequest pageRequest = PageRequest.of(pageNumber, size, Sort.by("start").descending());
+
+        switch (state) {
+            case FUTURE:
+                return bookingRepository.findByOwnerIdAndStatusIn(ownerId, Set.of(Status.WAITING, Status.APPROVED), pageRequest);
+            case REJECTED:
+                return bookingRepository.findByOwnerIdAndStatus(ownerId, Status.REJECTED, pageRequest);
+            case WAITING:
+                return bookingRepository.findByOwnerIdAndStatus(ownerId, Status.WAITING, pageRequest);
+            case CURRENT:
+                return bookingRepository.findByOwnerIdCurrent(ownerId, LocalDateTime.now(), pageRequest);
+            case PAST:
+                return bookingRepository.findByOwnerIdPast(ownerId, LocalDateTime.now(), pageRequest);
+            case ALL:
+            default:
+                return bookingRepository.findByOwnerId(ownerId, pageRequest);
+        }
     }
 
     private Booking getBooking(long id) {
