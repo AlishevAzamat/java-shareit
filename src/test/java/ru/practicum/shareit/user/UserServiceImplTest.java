@@ -23,7 +23,8 @@ class UserServiceImplTest {
     private final UserService userService = new UserServiceImpl(userRepository, userMapper);
 
     @Test
-    void getUserNegative() {
+    @DisplayName("Передается неверный параметр")
+    void getUser_throwIncorrectParameterException_whenNegative() {
         Throwable thrown = assertThrows(IncorrectParameterException.class, () -> {
             userService.getUser(-1);
         });

@@ -18,6 +18,7 @@ import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.request.ItemRequestService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserService;
+import ru.practicum.shareit.utils.PaginationUtil;
 
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
@@ -96,8 +97,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getAll(long userId, int from, int size) {
-        int pageNumber = (int) Math.ceil((double) from / size);
-        Page<Item> itemsPage = itemRepository.findByOwnerId(userId, PageRequest.of(pageNumber, size, Sort.by("id").ascending()));
+        PageRequest pageRequest = PaginationUtil.getPageRequestAsc(from, size, "id");
+        Page<Item> itemsPage = itemRepository.findByOwnerId(userId, pageRequest);
         List<Item> items = itemsPage.toList();
 
         Map<Long, Booking> bookingsBeforeMap = bookingRepository.findByItemInAndStartBeforeOrderByStartDesc(items, LocalDateTime.now())

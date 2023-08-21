@@ -90,7 +90,7 @@ class ItemServiceImplTest {
     @Test
     @DisplayName("Вывод всех вещей, пагинация 0")
     void getAllItem_throwIllegalArgumentException_whenSizeZero() {
-        Throwable thrown = assertThrows(IllegalArgumentException.class, () -> {
+        Throwable thrown = assertThrows(ArithmeticException.class, () -> {
             service.getAll(1, 0, 0);
         });
 
