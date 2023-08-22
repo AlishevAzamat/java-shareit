@@ -1,10 +1,13 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.comment.CommentDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 /**
@@ -13,6 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/items")
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
@@ -41,12 +45,17 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getAll(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return itemService.getAll(userId);
+    public List<ItemDto> getItems(@RequestHeader("X-Sharer-User-Id") long userId,
+                                  @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                  @Positive @RequestParam(defaultValue = "10") int size) {
+        return itemService.getAll(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestHeader("X-Sharer-User-Id") long userId, @RequestParam String text) {
-        return itemService.searchText(userId, text);
+    public List<ItemDto> searchItems(@RequestHeader("X-Sharer-User-Id") long userId,
+                                     @RequestParam String text,
+                                     @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                     @Positive @RequestParam(defaultValue = "10") int size) {
+        return itemService.searchText(userId, text, from, size);
     }
 }

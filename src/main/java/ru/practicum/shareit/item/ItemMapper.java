@@ -14,7 +14,7 @@ public class ItemMapper {
                 .description(item.getDescription())
                 .available(item.isAvailable())
                 .comments(new ArrayList<>())
-                .request(item.getRequest() != null ? item.getRequest().getId() : null)
+                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
 
