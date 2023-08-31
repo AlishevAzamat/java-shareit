@@ -1,4 +1,4 @@
-package shareit.user;
+package ru.practicum.shareit.user;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
